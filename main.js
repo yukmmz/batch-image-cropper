@@ -4,6 +4,10 @@ const HANDLE_R   = 6;
 const HANDLE_HIT = 10;
 const UNDO_LIMIT = 50;
 
+const APP_VERSION = '1.0.0';
+const APP_URL     = 'https://yukmmz.github.io/batch-image-cropper/';
+const SRC_URL     = 'https://github.com/yukmmz/batch-image-cropper';
+
 // ── State ─────────────────────────────────────────────────────────────────────
 
 const images = [];  // [{file, img, rect:{x,y,w,h}, undoStack:[]}]
@@ -50,6 +54,13 @@ const suffix     = document.getElementById('suffix');
 const modal      = document.getElementById('modal');
 const modalBody  = document.getElementById('modal-body');
 const modalClose = document.getElementById('modal-close');
+
+const verEl      = document.getElementById('ver');
+const btnQr      = document.getElementById('btn-qr');
+const qrOverlay  = document.getElementById('qr-overlay');
+const qrClose    = document.getElementById('qr-close');
+const qrAppUrl   = document.getElementById('qr-app-url');
+const qrSrcUrl   = document.getElementById('qr-src-url');
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -662,3 +673,13 @@ btnSave.addEventListener('click', async () => {
     }
   }
 });
+
+// ── Version & QR ─────────────────────────────────────────────────────────────
+
+verEl.textContent = `Batch Image Cropper v${APP_VERSION}`;
+qrAppUrl.textContent = APP_URL;
+qrSrcUrl.textContent = SRC_URL;
+
+btnQr.addEventListener('click', () => { qrOverlay.hidden = false; });
+qrClose.addEventListener('click', () => { qrOverlay.hidden = true; });
+qrOverlay.addEventListener('click', e => { if (e.target === qrOverlay) qrOverlay.hidden = true; });
