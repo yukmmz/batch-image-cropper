@@ -208,16 +208,19 @@ input[type="file"] { display: none; }
   margin-top: auto;
   padding-top: 8px;
   display: flex;
-  align-items: center;
-  justify-content: space-between;
+  flex-direction: column;
+  gap: 5px;
+}
+
+#footer-btns {
+  display: flex;
   gap: 6px;
 }
 
 #ver {
   font-size: 10px;
   color: #5a5a5a;
-  flex: 1;
-  text-align: right;
+  text-align: center;
   white-space: nowrap;
 }
 
