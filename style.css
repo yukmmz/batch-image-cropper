@@ -1,0 +1,323 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #2b2b2b;
+  --sidebar:    #383838;
+  --panel:      #424242;
+  --border:     #555;
+  --text:       #ddd;
+  --text-sub:   #888;
+  --accent:     #5a9fd4;
+}
+
+html, body {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+  font-size: 13px;
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* ── Layout ────────────────────────────────────────────────────────────────── */
+
+#app {
+  display: flex;
+  height: 100vh;
+}
+
+/* ── Sidebar ───────────────────────────────────────────────────────────────── */
+
+#sidebar {
+  width: 238px;
+  flex-shrink: 0;
+  background: var(--sidebar);
+  padding: 8px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.section { }
+
+fieldset {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 6px 8px 8px;
+}
+
+legend {
+  font-size: 11px;
+  color: var(--text-sub);
+  padding: 0 4px;
+}
+
+/* Load button */
+.btn-load {
+  display: block;
+  text-align: center;
+  padding: 9px;
+  background: #505050;
+  border: 1px dashed #666;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #ccc;
+  font-size: 13px;
+  transition: background 0.1s;
+}
+.btn-load:hover { background: #5a5a5a; }
+input[type="file"] { display: none; }
+
+.sub-hint {
+  font-size: 10px;
+  color: var(--text-sub);
+  text-align: center;
+  margin-top: 3px;
+}
+
+/* Navigation */
+.nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.nav-row button {
+  background: #505050;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 4px 10px;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: background 0.1s;
+}
+.nav-row button:hover { background: #626262; }
+
+#nav-counter { min-width: 52px; text-align: center; }
+
+.nav-name {
+  font-size: 10px;
+  color: var(--text-sub);
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.4;
+}
+
+/* Form rows */
+.field-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 5px;
+}
+
+.field-row label {
+  width: 20px;
+  font-size: 12px;
+  color: var(--text-sub);
+  flex-shrink: 0;
+}
+
+.suffix-row label { width: 42px; }
+
+.field-row input[type="number"],
+.field-row input[type="text"] {
+  flex: 1;
+  background: #4a4a4a;
+  border: 1px solid var(--border);
+  color: var(--text);
+  padding: 3px 6px;
+  border-radius: 3px;
+  font-size: 12px;
+  min-width: 0;
+}
+.field-row input:focus {
+  outline: 1px solid var(--accent);
+  border-color: var(--accent);
+}
+
+/* Modifier hints */
+.mod-hint {
+  font-size: 10px;
+  color: #6a6a6a;
+  line-height: 1.8;
+  padding: 0 2px;
+}
+
+/* Generic block button */
+.btn-block {
+  display: block;
+  width: 100%;
+  padding: 6px 8px;
+  border: none;
+  border-radius: 3px;
+  font-size: 12px;
+  cursor: pointer;
+  margin-bottom: 4px;
+  transition: filter 0.1s;
+}
+.btn-block:hover { filter: brightness(1.12); }
+.btn-block:last-child { margin-bottom: 0; }
+
+/* Undo */
+#btn-undo {
+  background: #545454;
+  color: var(--text);
+  border: 1px solid #666;
+}
+
+/* Alignment */
+.btn-align {
+  display: block;
+  width: 100%;
+  padding: 5px 8px;
+  background: #4a7fb0;
+  border: none;
+  color: #fff;
+  border-radius: 3px;
+  margin-top: 5px;
+  text-align: left;
+  font-size: 12px;
+  cursor: pointer;
+  transition: filter 0.1s;
+}
+.btn-align:first-of-type { margin-top: 4px; }
+.btn-align:hover { filter: brightness(1.15); }
+
+.btn-match-all { background: #3a6fa0; }
+
+.align-desc {
+  font-size: 10px;
+  color: #6a6a6a;
+  margin-top: 7px;
+  line-height: 1.65;
+}
+
+/* All Figs / Save */
+.btn-allfigs { background: #c8b84a; color: #222; }
+.btn-save    { background: #5cb85c; color: #fff; margin-bottom: 0; }
+
+/* ── Canvas ─────────────────────────────────────────────────────────────────── */
+
+#canvas-wrap {
+  flex: 1;
+  position: relative;
+  background: #484848;
+  overflow: hidden;
+}
+
+#canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  cursor: crosshair;
+}
+
+#drop-veil {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(80, 160, 255, 0.15);
+  border: 3px dashed #5af;
+  color: #7cf;
+  font-size: 22px;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  letter-spacing: 0.04em;
+}
+#drop-veil.active { display: flex; }
+
+/* ── Modal ──────────────────────────────────────────────────────────────────── */
+
+#modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.74);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#modal-box {
+  background: var(--sidebar);
+  border-radius: 8px;
+  width: min(96vw, 1600px);
+  height: 93vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 10px 48px rgba(0, 0, 0, 0.55);
+}
+
+#modal-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 16px;
+  background: #444;
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: #ccc;
+  flex-shrink: 0;
+}
+
+#modal-close {
+  background: none;
+  border: none;
+  color: #aaa;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 1px 7px 3px;
+  border-radius: 3px;
+  line-height: 1;
+}
+#modal-close:hover { background: #555; color: #fff; }
+
+#modal-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-content: flex-start;
+}
+
+.thumb-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  border-radius: 5px;
+  padding: 4px;
+  transition: border-color 0.12s, background 0.12s;
+}
+.thumb-cell:hover {
+  border-color: #5af;
+  background: rgba(80, 160, 255, 0.08);
+}
+.thumb-cell.active {
+  border-color: #fa0;
+  background: rgba(255, 170, 0, 0.10);
+}
+.thumb-cell canvas { display: block; border-radius: 2px; }
+
+.thumb-name {
+  font-size: 9px;
+  color: var(--text-sub);
+  margin-top: 4px;
+  max-width: 144px;
+  text-align: center;
+  word-break: break-all;
+  line-height: 1.35;
+}

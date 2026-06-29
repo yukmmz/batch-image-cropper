@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batch Image Cropper</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div id="app">
+
+    <aside id="sidebar">
+
+      <!-- Load -->
+      <div class="section">
+        <label class="btn-load" for="file-input">Load Images</label>
+        <input id="file-input" type="file" multiple accept="image/jpeg,image/png,image/webp,image/bmp,image/gif">
+        <div class="sub-hint">or drag &amp; drop anywhere</div>
+      </div>
+
+      <!-- Navigation -->
+      <div class="section" id="sec-nav" style="display:none">
+        <div class="nav-row">
+          <button id="btn-prev">&#9664;</button>
+          <span id="nav-counter">1 / 1</span>
+          <button id="btn-next">&#9654;</button>
+        </div>
+        <div id="nav-name" class="nav-name"></div>
+      </div>
+
+      <!-- Crop rect -->
+      <fieldset id="sec-rect" style="display:none">
+        <legend>Crop Rect (this image)</legend>
+        <div class="field-row"><label>X</label><input id="sx" type="number" min="0" value="0"></div>
+        <div class="field-row"><label>Y</label><input id="sy" type="number" min="0" value="0"></div>
+        <div class="field-row"><label>W</label><input id="sw" type="number" min="1" value="100"></div>
+        <div class="field-row"><label>H</label><input id="sh" type="number" min="1" value="100"></div>
+      </fieldset>
+
+      <!-- Modifier hints -->
+      <div class="mod-hint" id="sec-modhint" style="display:none">
+        Shift+resize &rarr; lock aspect ratio<br>
+        Ctrl/Cmd+resize &rarr; from center<br>
+        Shift+move &rarr; H or V axis only
+      </div>
+
+      <!-- Undo -->
+      <div class="section" id="sec-undo" style="display:none">
+        <button class="btn-block" id="btn-undo">&#8617; Undo</button>
+      </div>
+
+      <!-- Alignment -->
+      <fieldset id="sec-align" style="display:none">
+        <legend>Align to Current Image</legend>
+        <button class="btn-align" id="btn-centers">Align Centers</button>
+        <button class="btn-align" id="btn-aspect">Align Aspect Ratio</button>
+        <button class="btn-align" id="btn-size">Align Size</button>
+        <button class="btn-align btn-match-all" id="btn-match">Match All</button>
+        <div class="align-desc">
+          Centers: move center, keep each size<br>
+          Aspect: keep center &amp; area, change shape<br>
+          Size: keep center, apply current W&times;H<br>
+          Match All: copy x,y,w,h exactly
+        </div>
+      </fieldset>
+
+      <!-- All Figs / Save -->
+      <div class="section" id="sec-save" style="display:none">
+        <button class="btn-block btn-allfigs" id="btn-allfigs">All Figs</button>
+        <div class="field-row suffix-row">
+          <label>Suffix</label>
+          <input id="suffix" type="text" value="_cropped">
+        </div>
+        <button class="btn-block btn-save" id="btn-save">Save Cropped Images</button>
+        <div id="save-note" class="sub-hint" style="margin-top:4px"></div>
+      </div>
+
+    </aside>
+
+    <main id="canvas-wrap">
+      <canvas id="canvas"></canvas>
+      <div id="drop-veil">Drop images here</div>
+    </main>
+
+  </div>
+
+  <!-- All Figs modal -->
+  <div id="modal" style="display:none" role="dialog" aria-modal="true">
+    <div id="modal-box">
+      <div id="modal-head">
+        <span>All Figures &mdash; click to navigate</span>
+        <button id="modal-close" aria-label="Close">&times;</button>
+      </div>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
