@@ -221,7 +221,7 @@ input[type="file"] { display: none; }
   white-space: nowrap;
 }
 
-#btn-qr {
+#btn-qr, #btn-shortcuts, #btn-fullscreen {
   background: #4a4a4a;
   border: 1px solid #5a5a5a;
   color: #aaa;
@@ -231,7 +231,7 @@ input[type="file"] { display: none; }
   cursor: pointer;
   flex-shrink: 0;
 }
-#btn-qr:hover { background: #5a5a5a; color: #ddd; }
+#btn-qr:hover, #btn-shortcuts:hover, #btn-fullscreen:hover { background: #5a5a5a; color: #ddd; }
 
 /* ── QR overlay ─────────────────────────────────────────────────────────────── */
 
@@ -284,6 +284,17 @@ input[type="file"] { display: none; }
   border: 1px solid #ddd;
 }
 
+.qr-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+}
+.qr-link:hover .qr-img { opacity: 0.82; }
+.qr-link:hover .qr-url { text-decoration: underline; color: #0066cc; }
+
 .qr-url {
   font-size: 11px;
   color: #555;
@@ -302,6 +313,79 @@ input[type="file"] { display: none; }
   cursor: pointer;
 }
 #qr-close:hover { background: #444; }
+
+/* ── JSON section ────────────────────────────────────────────────────────────── */
+
+#btn-export-json { background: #4a6a8a; color: #dde; }
+#btn-import-json { background: #3a5a6a; color: #dde; }
+
+/* ── Shortcuts overlay ───────────────────────────────────────────────────────── */
+
+#shortcuts-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.78);
+}
+#shortcuts-overlay[hidden] { display: none; }
+
+#shortcuts-card {
+  background: #252525;
+  color: #ccc;
+  border-radius: 12px;
+  padding: 20px 26px 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 88vh;
+  overflow-y: auto;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
+  min-width: 340px;
+}
+
+#shortcuts-card h2 {
+  font-size: 10px;
+  font-weight: 600;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 8px 0 2px;
+}
+#shortcuts-card h2:first-child { margin-top: 0; }
+
+.shortcuts-table {
+  border-collapse: collapse;
+  width: 100%;
+  font-size: 12px;
+}
+.shortcuts-table td {
+  padding: 4px 6px;
+  vertical-align: top;
+  line-height: 1.5;
+}
+.shortcuts-table td:first-child {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  color: #88aadd;
+  white-space: nowrap;
+  padding-right: 18px;
+}
+.shortcuts-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
+
+#shortcuts-close {
+  background: #444;
+  color: #eee;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 24px;
+  font-size: 13px;
+  cursor: pointer;
+  align-self: center;
+  margin-top: 10px;
+}
+#shortcuts-close:hover { background: #555; }
 
 /* ── Canvas ─────────────────────────────────────────────────────────────────── */
 
@@ -333,6 +417,24 @@ input[type="file"] { display: none; }
   letter-spacing: 0.04em;
 }
 #drop-veil.active { display: flex; }
+
+#toast {
+  position: absolute;
+  top: 16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(20, 20, 20, 0.82);
+  color: #eee;
+  padding: 7px 20px;
+  border-radius: 20px;
+  font-size: 12px;
+  white-space: nowrap;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.2s;
+  z-index: 100;
+}
+#toast.show { opacity: 1; }
 
 /* ── Modal ──────────────────────────────────────────────────────────────────── */
 

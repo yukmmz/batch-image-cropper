@@ -65,6 +65,14 @@
         </div>
       </fieldset>
 
+      <!-- Crop Data (JSON export / import) -->
+      <fieldset id="sec-json" style="display:none">
+        <legend>Crop Data</legend>
+        <button class="btn-block" id="btn-export-json">Export Rects (JSON)</button>
+        <button class="btn-block" id="btn-import-json">Import Rects (JSON)</button>
+        <input id="json-input" type="file" accept=".json">
+      </fieldset>
+
       <!-- All Figs / Save -->
       <div class="section" id="sec-save" style="display:none">
         <button class="btn-block btn-allfigs" id="btn-allfigs">All Figs</button>
@@ -79,6 +87,8 @@
       <!-- Version + QR (always visible at sidebar bottom) -->
       <div id="sec-footer">
         <button id="btn-qr" title="Show QR codes">QR</button>
+        <button id="btn-shortcuts" title="Keyboard shortcuts (?)">?</button>
+        <button id="btn-fullscreen" title="Toggle fullscreen (F)">⛶</button>
         <span id="ver"></span>
       </div>
 
@@ -87,6 +97,7 @@
     <main id="canvas-wrap">
       <canvas id="canvas"></canvas>
       <div id="drop-veil">Drop images here</div>
+      <div id="toast" aria-live="polite"></div>
     </main>
 
   </div>
@@ -97,13 +108,17 @@
       <div id="qr-row">
         <div class="qr-col">
           <div class="qr-label">App</div>
-          <img class="qr-img" src="qr.svg" alt="QR: app URL">
-          <div class="qr-url" id="qr-app-url"></div>
+          <a id="qr-app-link" class="qr-link" href="#" target="_blank" rel="noopener">
+            <img class="qr-img" src="qr.svg" alt="QR: app URL">
+            <div class="qr-url" id="qr-app-url"></div>
+          </a>
         </div>
         <div class="qr-col">
           <div class="qr-label">Source</div>
-          <img class="qr-img" src="src-qr.svg" alt="QR: source repo URL">
-          <div class="qr-url" id="qr-src-url"></div>
+          <a id="qr-src-link" class="qr-link" href="#" target="_blank" rel="noopener">
+            <img class="qr-img" src="src-qr.svg" alt="QR: source repo URL">
+            <div class="qr-url" id="qr-src-url"></div>
+          </a>
         </div>
       </div>
       <button id="qr-close">Close</button>
@@ -118,6 +133,36 @@
         <button id="modal-close" aria-label="Close">&times;</button>
       </div>
       <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <!-- Shortcuts overlay -->
+  <div id="shortcuts-overlay" hidden role="dialog" aria-modal="true">
+    <div id="shortcuts-card">
+      <h2>Navigation</h2>
+      <table class="shortcuts-table">
+        <tr><td>← / →</td><td>Previous / next image</td></tr>
+        <tr><td>Ctrl / Cmd + Z</td><td>Undo</td></tr>
+        <tr><td>F</td><td>Toggle fullscreen</td></tr>
+        <tr><td>?</td><td>Show / hide shortcuts</td></tr>
+      </table>
+      <h2>Crop Rect</h2>
+      <table class="shortcuts-table">
+        <tr><td>Drag rect body</td><td>Move crop</td></tr>
+        <tr><td>Drag corner handle</td><td>Resize crop</td></tr>
+        <tr><td>Shift + resize</td><td>Lock aspect ratio</td></tr>
+        <tr><td>Ctrl / Cmd + resize</td><td>Resize from center</td></tr>
+        <tr><td>Shift + move</td><td>Constrain to H or V axis</td></tr>
+      </table>
+      <h2>Zoom &amp; Pan</h2>
+      <table class="shortcuts-table">
+        <tr><td>Ctrl / Cmd + Scroll</td><td>Zoom in / out</td></tr>
+        <tr><td>Scroll</td><td>Pan</td></tr>
+        <tr><td>Double-click canvas</td><td>Reset zoom &amp; pan</td></tr>
+        <tr><td>Pinch (touch)</td><td>Zoom</td></tr>
+        <tr><td>Single touch drag</td><td>Move / resize crop</td></tr>
+      </table>
+      <button id="shortcuts-close">Close</button>
     </div>
   </div>
 

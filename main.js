@@ -20,6 +20,11 @@ let dispOy = 0;
 let drag = null;         // {mode, sx, sy, rect0}
 let preDragRect = null;  // snapshot before drag (for undo on mouseup)
 
+let zoom      = 1.0;
+let panX      = 0;
+let panY      = 0;
+let baseScale = 1;
+
 // ── DOM ───────────────────────────────────────────────────────────────────────
 
 const canvas     = document.getElementById('canvas');
@@ -54,6 +59,7 @@ const suffix     = document.getElementById('suffix');
 const modal      = document.getElementById('modal');
 const modalBody  = document.getElementById('modal-body');
 const modalClose = document.getElementById('modal-close');
+const toast      = document.getElementById('toast');
 
 const verEl      = document.getElementById('ver');
 const btnQr      = document.getElementById('btn-qr');
@@ -61,6 +67,15 @@ const qrOverlay  = document.getElementById('qr-overlay');
 const qrClose    = document.getElementById('qr-close');
 const qrAppUrl   = document.getElementById('qr-app-url');
 const qrSrcUrl   = document.getElementById('qr-src-url');
+
+const secJson          = document.getElementById('sec-json');
+const btnExportJson    = document.getElementById('btn-export-json');
+const btnImportJson    = document.getElementById('btn-import-json');
+const jsonInput        = document.getElementById('json-input');
+const btnFullscreen    = document.getElementById('btn-fullscreen');
+const btnShortcuts     = document.getElementById('btn-shortcuts');
+const shortcutsOverlay = document.getElementById('shortcuts-overlay');
+const shortcutsClose   = document.getElementById('shortcuts-close');
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -119,6 +134,7 @@ function loadFiles(files) {
     images.length = 0;
     results.filter(Boolean).forEach(e => images.push(e));
     idx = 0;
+    resetView();
     showPanels();
     redraw();
     syncSpins();
@@ -126,7 +142,7 @@ function loadFiles(files) {
 }
 
 function showPanels() {
-  [secNav, secRect, secModhint, secUndo, secAlign, secSave]
+  [secNav, secRect, secModhint, secUndo, secAlign, secJson, secSave]
     .forEach(el => el.style.display = '');
   saveNote.textContent = ('showDirectoryPicker' in window)
     ? 'Will write files directly to a chosen folder.'
@@ -164,10 +180,27 @@ new ResizeObserver(() => {
 function computeDisp(img) {
   const cw = canvas.width, ch = canvas.height;
   const iw = img.naturalWidth, ih = img.naturalHeight;
-  const s  = Math.min(cw / iw, ch / ih);
-  dispScale = s;
-  dispOx = Math.floor((cw - iw * s) / 2);
-  dispOy = Math.floor((ch - ih * s) / 2);
+  baseScale = Math.min(cw / iw, ch / ih);
+  dispScale = baseScale * zoom;
+  dispOx    = Math.floor((cw - iw * dispScale) / 2 + panX);
+  dispOy    = Math.floor((ch - ih * dispScale) / 2 + panY);
+}
+
+function resetView() {
+  zoom = 1.0;
+  panX = 0;
+  panY = 0;
+}
+
+// ── Toast notification ────────────────────────────────────────────────────────
+
+let toastTimer = null;
+
+function showToast(msg, ms = 2000) {
+  toast.textContent = msg;
+  toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => toast.classList.remove('show'), ms);
 }
 
 function redraw() {
@@ -403,17 +436,18 @@ btnUndo.addEventListener('click', () => {
   entry.rect = entry.undoStack.pop();
   syncSpins();
   redraw();
+  showToast('Undone');
 });
 
 document.addEventListener('keydown', e => {
-  // Ctrl/Cmd+Z → undo
   if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
     e.preventDefault();
     btnUndo.click();
     return;
   }
-  // Arrow keys → navigate (skip when typing in inputs)
   if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'f' || e.key === 'F')  { e.preventDefault(); toggleFullscreen(); return; }
+  if (e.key === '?')                    { e.preventDefault(); shortcutsOverlay.hidden = !shortcutsOverlay.hidden; return; }
   if (e.key === 'ArrowLeft')  btnPrev.click();
   if (e.key === 'ArrowRight') btnNext.click();
 });
@@ -440,6 +474,7 @@ document.getElementById('btn-centers').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
+  showToast('Centers aligned');
 });
 
 document.getElementById('btn-aspect').addEventListener('click', () => {
@@ -456,6 +491,7 @@ document.getElementById('btn-aspect').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
+  showToast('Aspect ratios aligned');
 });
 
 document.getElementById('btn-size').addEventListener('click', () => {
@@ -468,6 +504,7 @@ document.getElementById('btn-size').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
+  showToast('Sizes aligned');
 });
 
 document.getElementById('btn-match').addEventListener('click', () => {
@@ -478,6 +515,7 @@ document.getElementById('btn-match').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
+  showToast('All rects matched');
 });
 
 // ── All Figs ──────────────────────────────────────────────────────────────────
@@ -679,7 +717,199 @@ btnSave.addEventListener('click', async () => {
 verEl.textContent = `Batch Image Cropper v${APP_VERSION}`;
 qrAppUrl.textContent = APP_URL;
 qrSrcUrl.textContent = SRC_URL;
+document.getElementById('qr-app-link').href = APP_URL;
+document.getElementById('qr-src-link').href = SRC_URL;
 
 btnQr.addEventListener('click', () => { qrOverlay.hidden = false; });
 qrClose.addEventListener('click', () => { qrOverlay.hidden = true; });
 qrOverlay.addEventListener('click', e => { if (e.target === qrOverlay) qrOverlay.hidden = true; });
+
+// ── Zoom & Pan ────────────────────────────────────────────────────────────────
+
+canvas.addEventListener('wheel', e => {
+  if (!images.length) return;
+  e.preventDefault();
+  const { ex, ey } = canvasPos(e);
+  if (e.ctrlKey || e.metaKey) {
+    const factor   = e.deltaY < 0 ? 1.15 : 1 / 1.15;
+    const newZoom  = Math.max(0.25, Math.min(16, zoom * factor));
+    const img      = images[idx].img;
+    const newScale = baseScale * newZoom;
+    panX = ex - ((ex - dispOx) / dispScale) * newScale - (canvas.width  - img.naturalWidth  * newScale) / 2;
+    panY = ey - ((ey - dispOy) / dispScale) * newScale - (canvas.height - img.naturalHeight * newScale) / 2;
+    zoom = newZoom;
+  } else {
+    panX -= e.deltaX;
+    panY -= e.deltaY;
+  }
+  redraw();
+}, { passive: false });
+
+canvas.addEventListener('dblclick', () => {
+  if (!images.length) return;
+  resetView();
+  redraw();
+});
+
+// ── Fullscreen ────────────────────────────────────────────────────────────────
+
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+
+document.addEventListener('fullscreenchange', () => {
+  btnFullscreen.textContent = document.fullscreenElement ? '⊡' : '⛶';
+  btnFullscreen.title = document.fullscreenElement ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)';
+});
+
+btnFullscreen.addEventListener('click', toggleFullscreen);
+
+// ── JSON export / import ──────────────────────────────────────────────────────
+
+btnExportJson.addEventListener('click', () => {
+  if (!images.length) return;
+  const data = images.map(e => ({ filename: e.file.name, rect: { ...e.rect } }));
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href     = URL.createObjectURL(blob);
+  a.download = 'crop-rects.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+});
+
+btnImportJson.addEventListener('click', () => jsonInput.click());
+
+jsonInput.addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try {
+      const data = JSON.parse(ev.target.result);
+      if (!Array.isArray(data)) throw new Error('Expected array');
+      data.forEach(item => {
+        const entry = images.find(en => en.file.name === item.filename);
+        if (!entry || !item.rect) return;
+        const i = images.indexOf(entry);
+        pushUndo(i, { ...entry.rect });
+        const { x, y, w, h } = item.rect;
+        entry.rect = clampRect(x, y, w, h, entry.img.naturalWidth, entry.img.naturalHeight);
+      });
+      syncSpins();
+      redraw();
+    } catch {
+      alert('Invalid JSON file.');
+    }
+    jsonInput.value = '';
+  };
+  reader.readAsText(file);
+});
+
+// ── Shortcuts overlay ─────────────────────────────────────────────────────────
+
+btnShortcuts.addEventListener('click', () => { shortcutsOverlay.hidden = false; });
+shortcutsClose.addEventListener('click', () => { shortcutsOverlay.hidden = true; });
+shortcutsOverlay.addEventListener('click', e => {
+  if (e.target === shortcutsOverlay) shortcutsOverlay.hidden = true;
+});
+
+// ── Touch support ─────────────────────────────────────────────────────────────
+
+let touchStartDist = null;
+let touchStartZoom = null;
+
+function touchCanvasPos(touch) {
+  const r = canvas.getBoundingClientRect();
+  return { ex: touch.clientX - r.left, ey: touch.clientY - r.top };
+}
+
+function pinchDist(e) {
+  return Math.hypot(
+    e.touches[1].clientX - e.touches[0].clientX,
+    e.touches[1].clientY - e.touches[0].clientY,
+  );
+}
+
+canvas.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (!images.length) return;
+  if (e.touches.length === 1) {
+    const { ex, ey } = touchCanvasPos(e.touches[0]);
+    const corner = hitCorner(ex, ey);
+    preDragRect = { ...images[idx].rect };
+    if (corner) {
+      drag = { mode: 'resize_' + corner, sx: ex, sy: ey, rect0: preDragRect };
+    } else if (hitBody(ex, ey)) {
+      drag = { mode: 'move', sx: ex, sy: ey, rect0: preDragRect };
+    } else {
+      drag = null; preDragRect = null;
+    }
+  } else if (e.touches.length === 2) {
+    drag = null; preDragRect = null;
+    touchStartDist = pinchDist(e);
+    touchStartZoom = zoom;
+  }
+}, { passive: false });
+
+canvas.addEventListener('touchmove', e => {
+  e.preventDefault();
+  if (!images.length) return;
+
+  if (e.touches.length === 2) {
+    const dist    = pinchDist(e);
+    const newZoom = Math.max(0.25, Math.min(16, touchStartZoom * dist / touchStartDist));
+    const r       = canvas.getBoundingClientRect();
+    const mx      = (e.touches[0].clientX + e.touches[1].clientX) / 2 - r.left;
+    const my      = (e.touches[0].clientY + e.touches[1].clientY) / 2 - r.top;
+    const img     = images[idx].img;
+    const newScale = baseScale * newZoom;
+    panX = mx - ((mx - dispOx) / dispScale) * newScale - (canvas.width  - img.naturalWidth  * newScale) / 2;
+    panY = my - ((my - dispOy) / dispScale) * newScale - (canvas.height - img.naturalHeight * newScale) / 2;
+    zoom = newZoom;
+    redraw();
+    return;
+  }
+
+  if (!drag || e.touches.length !== 1) return;
+  const { ex, ey } = touchCanvasPos(e.touches[0]);
+  const s  = dispScale;
+  const dx = (ex - drag.sx) / s;
+  const dy = (ey - drag.sy) / s;
+  const { x: x0, y: y0, w: w0, h: h0 } = drag.rect0;
+  const entry = images[idx];
+  const iw = entry.img.naturalWidth, ih = entry.img.naturalHeight;
+
+  let newRect;
+  if (drag.mode === 'move') {
+    newRect = clampRect(x0 + dx, y0 + dy, w0, h0, iw, ih);
+  } else {
+    const cid  = drag.mode.slice(7);
+    const sgnW = (cid === 'tr' || cid === 'br') ?  1 : -1;
+    const sgnH = (cid === 'bl' || cid === 'br') ?  1 : -1;
+    let nw = Math.max(1, Math.round(w0 + sgnW * dx));
+    let nh = Math.max(1, Math.round(h0 + sgnH * dy));
+    let nx, ny;
+    if      (cid === 'br') { nx = x0;           ny = y0;           }
+    else if (cid === 'tl') { nx = x0 + w0 - nw; ny = y0 + h0 - nh; }
+    else if (cid === 'tr') { nx = x0;            ny = y0 + h0 - nh; }
+    else                   { nx = x0 + w0 - nw;  ny = y0;           }
+    newRect = clampRect(nx, ny, nw, nh, iw, ih);
+  }
+  entry.rect = newRect;
+  syncSpins();
+  redraw();
+}, { passive: false });
+
+canvas.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (drag && preDragRect) {
+    const r = images[idx].rect, p = preDragRect;
+    if (r.x !== p.x || r.y !== p.y || r.w !== p.w || r.h !== p.h) pushUndo(idx, p);
+  }
+  drag = null; preDragRect = null;
+  if (e.touches.length === 0) { touchStartDist = null; touchStartZoom = null; }
+}, { passive: false });
