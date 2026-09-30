@@ -202,7 +202,7 @@ input[type="file"] { display: none; }
 .btn-allfigs { background: #c8b84a; color: #222; }
 .btn-save    { background: #5cb85c; color: #fff; margin-bottom: 0; }
 
-/* ── Sidebar footer (version + QR button) ──────────────────────────────────── */
+/* ── Sidebar footer (shortcuts button) ───────────────────────────────────── */
 
 #sec-footer {
   margin-top: auto;
@@ -217,14 +217,47 @@ input[type="file"] { display: none; }
   gap: 6px;
 }
 
-#ver {
-  font-size: 10px;
-  color: #5a5a5a;
-  text-align: center;
+/* App name + version: the same look in every yukmmz.github.io app.
+   Here the version sits under the name so both fit the sidebar width. */
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  margin-right: -4px;   /* let the icons use part of the sidebar padding */
+  padding: 2px 0 6px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.app-brand {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1 1 auto;
+  min-width: 0;
   white-space: nowrap;
 }
 
-#btn-qr, #btn-shortcuts, #btn-fullscreen {
+.app-title {
+  font-family: -apple-system, BlinkMacSystemFont, "Hiragino Sans", "Noto Sans JP", "Segoe UI", Roboto, sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  margin: 0;
+  letter-spacing: .02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.app-version {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: .55;
+  white-space: nowrap;
+  cursor: pointer;
+  align-self: flex-start;
+}
+.app-version:hover { text-decoration: underline; }
+
+#btn-shortcuts {
   background: #4a4a4a;
   border: 1px solid #5a5a5a;
   color: #aaa;
@@ -234,7 +267,7 @@ input[type="file"] { display: none; }
   cursor: pointer;
   flex-shrink: 0;
 }
-#btn-qr:hover, #btn-shortcuts:hover, #btn-fullscreen:hover { background: #5a5a5a; color: #ddd; }
+#btn-shortcuts:hover { background: #5a5a5a; color: #ddd; }
 
 /* ── QR overlay ─────────────────────────────────────────────────────────────── */
 
@@ -526,4 +559,184 @@ input[type="file"] { display: none; }
   text-align: center;
   word-break: break-all;
   line-height: 1.35;
+}
+
+/* ── Common header / settings pieces (same in every yukmmz.github.io app) ──── */
+
+:root {
+  --muted:  #9a9a9a;
+  --danger: #e5534b;
+}
+
+.btn {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 12px;
+  cursor: pointer;
+  touch-action: manipulation;
+  transition: background .12s ease;
+}
+.btn:hover { background: #4d4d4d; }
+.btn:active { transform: scale(.97); }
+
+/* A link styled as a button (「アプリ一覧を開く」). */
+a.btn { text-decoration: none; display: inline-block; }
+
+/* Muted icon buttons; narrower than the spec's 36px so the title fits the 238px sidebar. */
+.btn-icon {
+  width: 27px;
+  height: 32px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-icon:hover { background: #4a4a4a; color: var(--text); }
+
+/* The settings gear is the one control that must read at a glance. */
+#settings-btn {
+  font-size: 28px;
+  overflow: visible;
+}
+
+#fullscreen-btn { font-size: 19px; }
+#fullscreen-btn[hidden] { display: none; }
+
+/* ── Settings sheet ──────────────────────────────────────────────────────────── */
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 250;
+  background: rgba(0, 0, 0, .5);
+}
+.backdrop[hidden] { display: none; }
+
+.sheet {
+  position: fixed;
+  z-index: 260;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: min(440px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--sidebar);
+  color: var(--text);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, .6);
+  padding: 16px;
+  font-size: 14px;
+}
+.sheet[hidden] { display: none; }
+
+.sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sheet-title { font-size: 16px; margin: 0; }
+
+.sheet-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 0;
+  border-top: 1px solid var(--border);
+}
+
+.sheet-label { font-size: 13px; }
+
+.sheet-select {
+  font: inherit;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px 10px;
+  max-width: 60%;
+}
+
+/* ── Changelog overlay ───────────────────────────────────────────────────────── */
+
+#changelogOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+}
+#changelogOverlay[hidden] { display: none; }
+
+.changelog-card {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 48px);
+  display: flex;
+  flex-direction: column;
+  background: #252525;
+  color: #ccc;
+  border-radius: 14px;
+  padding: 20px 24px;
+  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
+  font-size: 13px;
+  user-select: text;
+}
+
+.changelog-title { font-size: 16px; margin: 0 0 8px; color: var(--text); }
+
+.changelog-list {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+.changelog-entry + .changelog-entry {
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+  padding-top: 8px;
+}
+
+.changelog-version { font-size: 13px; margin: 0 0 4px; color: var(--text); }
+
+.changelog-entry ul {
+  margin: 0;
+  padding-left: 1.2em;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+#changelogClose { margin-top: 12px; align-self: center; }
+
+/* A small dot on ⚙ and on the changelog button until the new version's
+ * changelog has been opened once. */
+#settings-btn, #changelogBtn { position: relative; }
+
+#settings-btn.has-news::after,
+#changelogBtn.has-news::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--danger);
 }

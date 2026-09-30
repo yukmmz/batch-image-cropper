@@ -12,11 +12,25 @@
 
     <aside id="sidebar">
 
+      <!-- App name (version directly below it), then ⛶ and ⚙ on the same row -->
+      <div class="sidebar-head">
+        <div class="app-brand">
+          <h1 class="app-title">Batch Image Cropper</h1>
+          <span id="appVersion" class="app-version"></span>
+        </div>
+        <button id="fullscreen-btn" class="btn btn-icon" type="button"
+                data-i18n-title="c.fullscreen" data-i18n-aria-label="c.fullscreen"
+                title="Full screen" aria-label="Full screen">⛶</button>
+        <button id="settings-btn" class="btn btn-icon" type="button"
+                data-i18n-title="c.settings" data-i18n-aria-label="c.settings"
+                title="Settings" aria-label="Settings" aria-expanded="false">⚙</button>
+      </div>
+
       <!-- Load -->
       <div class="section">
-        <label class="btn-load" for="file-input">Load Images</label>
+        <label class="btn-load" for="file-input" data-i18n="loadImages">Load Images</label>
         <input id="file-input" type="file" multiple accept="image/jpeg,image/png,image/webp,image/bmp,image/gif">
-        <div class="sub-hint">or drag &amp; drop anywhere</div>
+        <div class="sub-hint" data-i18n="dropHint">or drag &amp; drop anywhere</div>
       </div>
 
       <!-- Navigation -->
@@ -31,7 +45,7 @@
 
       <!-- Crop rect -->
       <fieldset id="sec-rect" style="display:none">
-        <legend>Crop Rect (this image)</legend>
+        <legend data-i18n="cropRect">Crop Rect (this image)</legend>
         <div class="field-row"><label>X</label><input id="sx" type="number" min="0" value="0"></div>
         <div class="field-row"><label>Y</label><input id="sy" type="number" min="0" value="0"></div>
         <div class="field-row"><label>W</label><input id="sw" type="number" min="1" value="100"></div>
@@ -39,7 +53,7 @@
       </fieldset>
 
       <!-- Modifier hints -->
-      <div class="mod-hint" id="sec-modhint" style="display:none">
+      <div class="mod-hint" id="sec-modhint" style="display:none" data-i18n-html="modHint">
         Shift+resize &rarr; lock aspect ratio<br>
         Ctrl/Cmd+resize &rarr; from center<br>
         Shift+move &rarr; H or V axis only
@@ -47,17 +61,17 @@
 
       <!-- Undo -->
       <div class="section" id="sec-undo" style="display:none">
-        <button class="btn-block" id="btn-undo">&#8617; Undo</button>
+        <button class="btn-block" id="btn-undo" data-i18n="undo">&#8617; Undo</button>
       </div>
 
       <!-- Alignment -->
       <fieldset id="sec-align" style="display:none">
-        <legend>Align to Current Image</legend>
-        <button class="btn-align" id="btn-centers">Align Centers</button>
-        <button class="btn-align" id="btn-aspect">Align Aspect Ratio</button>
-        <button class="btn-align" id="btn-size">Align Size</button>
-        <button class="btn-align btn-match-all" id="btn-match">Match All</button>
-        <div class="align-desc">
+        <legend data-i18n="alignLegend">Align to Current Image</legend>
+        <button class="btn-align" id="btn-centers" data-i18n="alignCenters">Align Centers</button>
+        <button class="btn-align" id="btn-aspect" data-i18n="alignAspect">Align Aspect Ratio</button>
+        <button class="btn-align" id="btn-size" data-i18n="alignSize">Align Size</button>
+        <button class="btn-align btn-match-all" id="btn-match" data-i18n="matchAll">Match All</button>
+        <div class="align-desc" data-i18n-html="alignDesc">
           Centers: move center, keep each size<br>
           Aspect: keep center &amp; area, change shape<br>
           Size: keep center, apply current W&times;H<br>
@@ -67,42 +81,76 @@
 
       <!-- Crop Data (JSON export / import) -->
       <fieldset id="sec-json" style="display:none">
-        <legend>Crop Data</legend>
-        <button class="btn-block" id="btn-export-json">Export Rects (JSON)</button>
-        <button class="btn-block" id="btn-import-json">Import Rects (JSON)</button>
+        <legend data-i18n="cropData">Crop Data</legend>
+        <button class="btn-block" id="btn-export-json" data-i18n="exportJson">Export Rects (JSON)</button>
+        <button class="btn-block" id="btn-import-json" data-i18n="importJson">Import Rects (JSON)</button>
         <input id="json-input" type="file" accept=".json">
       </fieldset>
 
       <!-- All Figs / Save -->
       <div class="section" id="sec-save" style="display:none">
-        <button class="btn-block btn-allfigs" id="btn-allfigs">All Figs</button>
+        <button class="btn-block btn-allfigs" id="btn-allfigs" data-i18n="allFigs">All Figs</button>
         <div class="field-row suffix-row">
-          <label>Suffix</label>
+          <label data-i18n="suffix">Suffix</label>
           <input id="suffix" type="text" value="_cropped">
         </div>
-        <button class="btn-block btn-save" id="btn-save">Save Cropped Images</button>
+        <button class="btn-block btn-save" id="btn-save" data-i18n="saveCropped">Save Cropped Images</button>
         <div id="save-note" class="sub-hint" style="margin-top:4px"></div>
       </div>
 
-      <!-- Version + QR (always visible at sidebar bottom) -->
+      <!-- Shortcuts (always visible at sidebar bottom) -->
       <div id="sec-footer">
         <div id="footer-btns">
-          <button id="btn-qr" title="Show QR codes">QR</button>
-          <button id="btn-shortcuts" title="Keyboard shortcuts (?)">?</button>
-          <button id="btn-fullscreen" title="Toggle fullscreen (F)">⛶</button>
+          <button id="btn-shortcuts" data-i18n-title="shortcutsTitle" title="Keyboard shortcuts (?)">?</button>
         </div>
-        <span id="ver"></span>
       </div>
 
     </aside>
 
     <main id="canvas-wrap">
       <canvas id="canvas"></canvas>
-      <div id="drop-veil">Drop images here</div>
+      <div id="drop-veil" data-i18n="dropVeil">Drop images here</div>
       <div id="toast" aria-live="polite"></div>
     </main>
 
   </div>
+
+  <!-- Settings sheet. The common rows (language, share, changelog, other apps)
+       are the same in every yukmmz.github.io app. This app stores no data,
+       so there is no "clear saved data" row. -->
+  <div id="sheet-backdrop" class="backdrop" hidden></div>
+
+  <section id="settings-panel" class="sheet" hidden data-i18n-aria-label="c.settings" aria-label="Settings">
+    <div class="sheet-head">
+      <h2 class="sheet-title" data-i18n="c.settings">Settings</h2>
+      <button id="settings-close" class="btn btn-icon" type="button"
+              data-i18n-aria-label="c.close" aria-label="Close">✕</button>
+    </div>
+
+    <div class="sheet-row">
+      <span class="sheet-label" data-i18n="c.language">Language</span>
+      <select id="lang-select" class="sheet-select" data-i18n-aria-label="c.language" aria-label="Language">
+        <option value="ja">日本語</option>
+        <option value="en">English</option>
+      </select>
+    </div>
+
+    <div class="sheet-row">
+      <span class="sheet-label" data-i18n="c.share">Share</span>
+      <button id="qrBtn" class="btn" type="button" data-i18n="c.showQr">Show QR codes</button>
+    </div>
+
+    <div class="sheet-row">
+      <span class="sheet-label" data-i18n="c.changelog">Changelog</span>
+      <button id="changelogBtn" class="btn" type="button" data-i18n="c.showChangelog">表示</button>
+    </div>
+
+    <div class="sheet-row">
+      <span class="sheet-label" data-i18n="c.otherApps">Other apps</span>
+      <a id="otherAppsLink" class="btn" href="https://yukmmz.github.io/" target="_blank" rel="noopener"
+         data-i18n="c.openPortal">Open app list</a>
+    </div>
+  </section>
 
   <!-- QR overlay -->
   <div id="qr-overlay" hidden role="dialog" aria-modal="true">
@@ -123,7 +171,16 @@
           </a>
         </div>
       </div>
-      <button id="qr-close">Close</button>
+      <button id="qr-close" data-i18n="c.close">Close</button>
+    </div>
+  </div>
+
+  <!-- Changelog: newest first, built from CHANGELOG in main.js -->
+  <div id="changelogOverlay" hidden>
+    <div class="changelog-card" role="dialog" aria-modal="true" data-i18n-aria-label="c.changelog" aria-label="Changelog">
+      <h2 class="changelog-title" data-i18n="c.changelog">Changelog</h2>
+      <div id="changelogList" class="changelog-list"></div>
+      <button id="changelogClose" class="btn" type="button" data-i18n="c.close">Close</button>
     </div>
   </div>
 
@@ -131,8 +188,8 @@
   <div id="modal" style="display:none" role="dialog" aria-modal="true">
     <div id="modal-box">
       <div id="modal-head">
-        <span>All Figures &mdash; click to navigate</span>
-        <button id="modal-close" aria-label="Close">&times;</button>
+        <span data-i18n="allFigsHead">All Figures &mdash; click to navigate</span>
+        <button id="modal-close" data-i18n-aria-label="c.close" aria-label="Close">&times;</button>
       </div>
       <div id="modal-body"></div>
     </div>
@@ -141,34 +198,35 @@
   <!-- Shortcuts overlay -->
   <div id="shortcuts-overlay" hidden role="dialog" aria-modal="true">
     <div id="shortcuts-card">
-      <h2>Navigation</h2>
+      <h2 data-i18n="scNavigation">Navigation</h2>
       <table class="shortcuts-table">
-        <tr><td>← / →</td><td>Previous / next image</td></tr>
-        <tr><td>Ctrl / Cmd + Z</td><td>Undo</td></tr>
-        <tr><td>F</td><td>Toggle fullscreen</td></tr>
-        <tr><td>?</td><td>Show / hide shortcuts</td></tr>
+        <tr><td>← / →</td><td data-i18n="scPrevNext">Previous / next image</td></tr>
+        <tr><td>Ctrl / Cmd + Z</td><td data-i18n="scUndo">Undo</td></tr>
+        <tr><td>F</td><td data-i18n="scFullscreen">Toggle fullscreen</td></tr>
+        <tr><td>?</td><td data-i18n="scShortcuts">Show / hide shortcuts</td></tr>
       </table>
-      <h2>Crop Rect</h2>
+      <h2 data-i18n="scCropRect">Crop Rect</h2>
       <table class="shortcuts-table">
-        <tr><td>Drag rect body</td><td>Move crop</td></tr>
-        <tr><td>Drag corner handle</td><td>Resize crop</td></tr>
-        <tr><td>Shift + resize</td><td>Lock aspect ratio</td></tr>
-        <tr><td>Ctrl / Cmd + resize</td><td>Resize from center</td></tr>
-        <tr><td>Shift + move</td><td>Constrain to H or V axis</td></tr>
+        <tr><td data-i18n="scDragBody">Drag rect body</td><td data-i18n="scMoveCrop">Move crop</td></tr>
+        <tr><td data-i18n="scDragCorner">Drag corner handle</td><td data-i18n="scResizeCrop">Resize crop</td></tr>
+        <tr><td data-i18n="scShiftResize">Shift + resize</td><td data-i18n="scLockAspect">Lock aspect ratio</td></tr>
+        <tr><td data-i18n="scCtrlResize">Ctrl / Cmd + resize</td><td data-i18n="scFromCenter">Resize from center</td></tr>
+        <tr><td data-i18n="scShiftMove">Shift + move</td><td data-i18n="scAxis">Constrain to H or V axis</td></tr>
       </table>
-      <h2>Zoom &amp; Pan</h2>
+      <h2 data-i18n="scZoomPan">Zoom &amp; Pan</h2>
       <table class="shortcuts-table">
-        <tr><td>Ctrl / Cmd + Scroll</td><td>Zoom in / out</td></tr>
-        <tr><td>Scroll</td><td>Pan</td></tr>
-        <tr><td>Double-click canvas</td><td>Reset zoom &amp; pan</td></tr>
-        <tr><td>Pinch (touch)</td><td>Zoom</td></tr>
-        <tr><td>Single touch drag</td><td>Move / resize crop</td></tr>
+        <tr><td data-i18n="scCtrlScroll">Ctrl / Cmd + Scroll</td><td data-i18n="scZoom">Zoom in / out</td></tr>
+        <tr><td data-i18n="scScroll">Scroll</td><td data-i18n="scPan">Pan</td></tr>
+        <tr><td data-i18n="scDblClick">Double-click canvas</td><td data-i18n="scResetView">Reset zoom &amp; pan</td></tr>
+        <tr><td data-i18n="scPinch">Pinch (touch)</td><td data-i18n="scPinchZoom">Zoom</td></tr>
+        <tr><td data-i18n="scTouchDrag">Single touch drag</td><td data-i18n="scTouchMove">Move / resize crop</td></tr>
       </table>
-      <button id="shortcuts-close">Close</button>
+      <button id="shortcuts-close" data-i18n="c.close">Close</button>
     </div>
   </div>
 
   <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="i18n.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

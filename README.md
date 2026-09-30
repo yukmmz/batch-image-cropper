@@ -10,7 +10,8 @@ No upload, no server — everything runs locally in your browser.
 - **Per-image crop rect** — each image has its own independent crop rectangle
 - **Alignment tools** — align centers, aspect ratios, sizes, or copy rect exactly across all images
 - **Zoom & pan** — `Ctrl/Cmd + Scroll` to zoom, `Scroll` to pan, double-click to reset
-- **Fullscreen** — `F` key or ⛶ button hides browser chrome for more canvas space
+- **Fullscreen** — `F` key or the ⛶ button (top of the sidebar) hides browser chrome for more canvas space
+- **Settings (⚙)** — language (Japanese / English), QR codes for sharing, changelog, link to other apps
 - **Undo** — per-image undo history (`Ctrl/Cmd + Z`)
 - **JSON export / import** — save and restore crop rects by filename
 - **Touch support** — single-touch drag to move/resize, pinch to zoom (iPad / tablet)

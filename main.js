@@ -4,9 +4,143 @@ const HANDLE_R   = 6;
 const HANDLE_HIT = 10;
 const UNDO_LIMIT = 50;
 
-const APP_VERSION = '1.0.0';
+const APP_VERSION = '1.1.0';
 const APP_URL     = 'https://yukmmz.github.io/batch-image-cropper/';
 const SRC_URL     = 'https://github.com/yukmmz/batch-image-cropper';
+
+const LANG_KEY         = 'batch-image-cropper/lang';
+const SEEN_VERSION_KEY = 'batch-image-cropper/seen-version';
+const STORAGE_PREFIX   = 'batch-image-cropper/';
+
+// ── Changelog ─────────────────────────────────────────────────────────────────
+
+/* What changed, newest first, shown from the settings sheet and from the
+ * version under the app name. Bumping APP_VERSION means adding an entry here;
+ * the first entry must match APP_VERSION. Written for users, in both languages. */
+const CHANGELOG = [
+  { version: '1.1.0', date: '2026-10-01', items: [
+    { ja: 'サイドバーの一番上にアプリ名とバージョンを表示するようにしました。バージョンを押すと更新履歴が開きます',
+      en: 'The app name and version are shown at the top of the sidebar; click the version to open this changelog' },
+    { ja: '設定（⚙）を追加しました。言語の切り替え・QR コードでの共有・更新履歴・他のアプリへのリンクがあります',
+      en: 'Added settings (⚙) with language, sharing by QR code, the changelog and a link to other apps' },
+    { ja: '全画面表示ボタン（⛶）をサイドバーの一番上（⚙ の左）に移しました。F キーも引き続き使えます',
+      en: 'The full-screen button (⛶) moved to the top of the sidebar, next to ⚙; the F key still works' },
+    { ja: '日本語の表示に対応しました（⚙ で日本語 / English を切り替え）',
+      en: 'Added a Japanese UI (switch between Japanese and English in ⚙)' },
+  ] },
+  { version: '1.0.0', date: '2026-06-29', items: [
+    { ja: '最初の公開版。複数の画像をまとめて切り抜き、フォルダ（Chrome / Edge）または ZIP（Safari / Firefox）に保存できます',
+      en: 'First release: crop many images at once and save them to a folder (Chrome / Edge) or a ZIP (Safari / Firefox)' },
+    { ja: '切り抜き枠は画像ごとに別々に持ち、ドラッグで移動・角でリサイズできます（Shift で縦横比固定、Ctrl/Cmd で中心から）',
+      en: 'Each image has its own crop rectangle: drag to move, drag a corner to resize (Shift keeps the aspect ratio, Ctrl/Cmd resizes from the center)' },
+    { ja: '今の画像に合わせて、全画像の枠の中心・縦横比・大きさをそろえる（またはそのままコピーする）機能',
+      en: 'Align the centers, aspect ratios or sizes of all rectangles to the current image, or copy it exactly' },
+    { ja: '元に戻す（Ctrl/Cmd + Z）、拡大・移動（Ctrl/Cmd + スクロール、スクロール）、全画面表示（F）',
+      en: 'Undo (Ctrl/Cmd + Z), zoom and pan (Ctrl/Cmd + scroll, scroll), full screen (F)' },
+    { ja: '切り抜き枠を JSON で書き出し・読み込み',
+      en: 'Export and import the crop rectangles as JSON' },
+    { ja: 'キーボードショートカット一覧（?）、タッチ操作（ドラッグ・ピンチ）、共有用の QR コード',
+      en: 'Keyboard shortcut list (?), touch support (drag and pinch), and QR codes for sharing' },
+  ] },
+];
+
+// ── UI strings ────────────────────────────────────────────────────────────────
+
+/* `c.*` keys are the common ones every yukmmz.github.io app uses with the
+ * same wording; the rest belong to this app. Exported files are not translated. */
+const STRINGS = {
+  ja: {
+    'c.settings': '設定', 'c.close': '閉じる', 'c.language': '言語', 'c.share': '共有',
+    'c.showQr': 'QR コードを表示', 'c.changelog': '更新履歴', 'c.showChangelog': '表示',
+    'c.otherApps': '他のアプリ', 'c.openPortal': 'アプリ一覧を開く', 'c.data': 'データ',
+    'c.clearData': '保存データを消す', 'c.fullscreen': '全画面表示',
+    loadImages: '画像を読み込む', dropHint: 'またはどこにでもドラッグ＆ドロップ',
+    dropVeil: 'ここに画像をドロップ',
+    cropRect: '切り抜き枠（この画像）',
+    modHint: 'Shift+リサイズ &rarr; 縦横比を固定<br>Ctrl/Cmd+リサイズ &rarr; 中心から<br>Shift+移動 &rarr; 縦か横だけ',
+    undo: '↩ 元に戻す',
+    alignLegend: '今の画像に合わせる',
+    alignCenters: '中心をそろえる', alignAspect: '縦横比をそろえる',
+    alignSize: '大きさをそろえる', matchAll: 'すべて同じにする',
+    alignDesc: '中心: 中心を移動、大きさは各自のまま<br>縦横比: 中心と面積を保ち、形を変える<br>大きさ: 中心を保ち、今の W&times;H にする<br>すべて: x,y,w,h をそのままコピー',
+    cropData: '切り抜きデータ',
+    exportJson: '枠を書き出す（JSON）', importJson: '枠を読み込む（JSON）',
+    allFigs: '全画像を一覧', suffix: '接尾辞',
+    saveCropped: '切り抜いた画像を保存', saving: '保存中…', buildingZip: 'ZIP を作成中…',
+    saveNoteFolder: '選んだフォルダに直接書き出します。',
+    saveNoteZip: 'Safari/Firefox: .zip ファイルをダウンロードします。',
+    savedN: '{n} 枚の画像を保存しました。',
+    jszipFailed: 'JSZip を読み込めませんでした。インターネット接続を確認してください。',
+    invalidJson: 'JSON ファイルが正しくありません。',
+    toastUndone: '元に戻しました', toastCenters: '中心をそろえました',
+    toastAspect: '縦横比をそろえました', toastSize: '大きさをそろえました',
+    toastMatch: 'すべての枠を同じにしました',
+    allFigsHead: '全画像 — クリックで移動',
+    shortcutsTitle: 'キーボードショートカット（?）',
+    scNavigation: '移動', scPrevNext: '前 / 次の画像', scUndo: '元に戻す',
+    scFullscreen: '全画面表示の切り替え', scShortcuts: 'ショートカット一覧の表示 / 非表示',
+    scCropRect: '切り抜き枠',
+    scDragBody: '枠の内側をドラッグ', scMoveCrop: '枠を移動',
+    scDragCorner: '角をドラッグ', scResizeCrop: '枠をリサイズ',
+    scShiftResize: 'Shift + リサイズ', scLockAspect: '縦横比を固定',
+    scCtrlResize: 'Ctrl / Cmd + リサイズ', scFromCenter: '中心からリサイズ',
+    scShiftMove: 'Shift + 移動', scAxis: '縦か横だけに移動',
+    scZoomPan: '拡大・移動',
+    scCtrlScroll: 'Ctrl / Cmd + スクロール', scZoom: '拡大 / 縮小',
+    scScroll: 'スクロール', scPan: '表示位置を移動',
+    scDblClick: 'キャンバスをダブルクリック', scResetView: '拡大と位置を元に戻す',
+    scPinch: 'ピンチ（タッチ）', scPinchZoom: '拡大 / 縮小',
+    scTouchDrag: '1 本指でドラッグ', scTouchMove: '枠を移動 / リサイズ',
+  },
+  en: {
+    'c.settings': 'Settings', 'c.close': 'Close', 'c.language': 'Language', 'c.share': 'Share',
+    'c.showQr': 'Show QR codes', 'c.changelog': 'Changelog', 'c.showChangelog': 'Show',
+    'c.otherApps': 'Other apps', 'c.openPortal': 'Open app list', 'c.data': 'Data',
+    'c.clearData': 'Clear saved data', 'c.fullscreen': 'Full screen',
+    loadImages: 'Load Images', dropHint: 'or drag & drop anywhere',
+    dropVeil: 'Drop images here',
+    cropRect: 'Crop Rect (this image)',
+    modHint: 'Shift+resize &rarr; lock aspect ratio<br>Ctrl/Cmd+resize &rarr; from center<br>Shift+move &rarr; H or V axis only',
+    undo: '↩ Undo',
+    alignLegend: 'Align to Current Image',
+    alignCenters: 'Align Centers', alignAspect: 'Align Aspect Ratio',
+    alignSize: 'Align Size', matchAll: 'Match All',
+    alignDesc: 'Centers: move center, keep each size<br>Aspect: keep center &amp; area, change shape<br>Size: keep center, apply current W&times;H<br>Match All: copy x,y,w,h exactly',
+    cropData: 'Crop Data',
+    exportJson: 'Export Rects (JSON)', importJson: 'Import Rects (JSON)',
+    allFigs: 'All Figs', suffix: 'Suffix',
+    saveCropped: 'Save Cropped Images', saving: 'Saving…', buildingZip: 'Building ZIP…',
+    saveNoteFolder: 'Will write files directly to a chosen folder.',
+    saveNoteZip: 'Safari/Firefox: will download a .zip file.',
+    savedN: 'Saved {n} image(s).',
+    jszipFailed: 'JSZip failed to load. Check your internet connection.',
+    invalidJson: 'Invalid JSON file.',
+    toastUndone: 'Undone', toastCenters: 'Centers aligned',
+    toastAspect: 'Aspect ratios aligned', toastSize: 'Sizes aligned',
+    toastMatch: 'All rects matched',
+    allFigsHead: 'All Figures — click to navigate',
+    shortcutsTitle: 'Keyboard shortcuts (?)',
+    scNavigation: 'Navigation', scPrevNext: 'Previous / next image', scUndo: 'Undo',
+    scFullscreen: 'Toggle fullscreen', scShortcuts: 'Show / hide shortcuts',
+    scCropRect: 'Crop Rect',
+    scDragBody: 'Drag rect body', scMoveCrop: 'Move crop',
+    scDragCorner: 'Drag corner handle', scResizeCrop: 'Resize crop',
+    scShiftResize: 'Shift + resize', scLockAspect: 'Lock aspect ratio',
+    scCtrlResize: 'Ctrl / Cmd + resize', scFromCenter: 'Resize from center',
+    scShiftMove: 'Shift + move', scAxis: 'Constrain to H or V axis',
+    scZoomPan: 'Zoom & Pan',
+    scCtrlScroll: 'Ctrl / Cmd + Scroll', scZoom: 'Zoom in / out',
+    scScroll: 'Scroll', scPan: 'Pan',
+    scDblClick: 'Double-click canvas', scResetView: 'Reset zoom & pan',
+    scPinch: 'Pinch (touch)', scPinchZoom: 'Zoom',
+    scTouchDrag: 'Single touch drag', scTouchMove: 'Move / resize crop',
+  },
+};
+
+const t = (key, params) => I18N.t(key, params);
+
+// Before anything is rendered: markup and JS-built labels use the language.
+I18N.init(LANG_KEY, STRINGS);
 
 // ── State ─────────────────────────────────────────────────────────────────────
 
@@ -61,8 +195,8 @@ const modalBody  = document.getElementById('modal-body');
 const modalClose = document.getElementById('modal-close');
 const toast      = document.getElementById('toast');
 
-const verEl      = document.getElementById('ver');
-const btnQr      = document.getElementById('btn-qr');
+const appVersion = document.getElementById('appVersion');
+const btnQr      = document.getElementById('qrBtn');
 const qrOverlay  = document.getElementById('qr-overlay');
 const qrClose    = document.getElementById('qr-close');
 const qrAppUrl   = document.getElementById('qr-app-url');
@@ -72,10 +206,20 @@ const secJson          = document.getElementById('sec-json');
 const btnExportJson    = document.getElementById('btn-export-json');
 const btnImportJson    = document.getElementById('btn-import-json');
 const jsonInput        = document.getElementById('json-input');
-const btnFullscreen    = document.getElementById('btn-fullscreen');
+const btnFullscreen    = document.getElementById('fullscreen-btn');
 const btnShortcuts     = document.getElementById('btn-shortcuts');
 const shortcutsOverlay = document.getElementById('shortcuts-overlay');
 const shortcutsClose   = document.getElementById('shortcuts-close');
+
+const settingsBtn      = document.getElementById('settings-btn');
+const settingsPanel    = document.getElementById('settings-panel');
+const settingsClose    = document.getElementById('settings-close');
+const sheetBackdrop    = document.getElementById('sheet-backdrop');
+const langSelect       = document.getElementById('lang-select');
+const changelogBtn     = document.getElementById('changelogBtn');
+const changelogOverlay = document.getElementById('changelogOverlay');
+const changelogList    = document.getElementById('changelogList');
+const changelogClose   = document.getElementById('changelogClose');
 
 // ── Geometry helpers ──────────────────────────────────────────────────────────
 
@@ -144,9 +288,13 @@ function loadFiles(files) {
 function showPanels() {
   [secNav, secRect, secModhint, secUndo, secAlign, secJson, secSave]
     .forEach(el => el.style.display = '');
+  updateSaveNote();
+}
+
+function updateSaveNote() {
   saveNote.textContent = ('showDirectoryPicker' in window)
-    ? 'Will write files directly to a chosen folder.'
-    : 'Safari/Firefox: will download a .zip file.';
+    ? t('saveNoteFolder')
+    : t('saveNoteZip');
 }
 
 // ── Drag & drop ───────────────────────────────────────────────────────────────
@@ -436,7 +584,7 @@ btnUndo.addEventListener('click', () => {
   entry.rect = entry.undoStack.pop();
   syncSpins();
   redraw();
-  showToast('Undone');
+  showToast(t('toastUndone'));
 });
 
 document.addEventListener('keydown', e => {
@@ -445,7 +593,15 @@ document.addEventListener('keydown', e => {
     btnUndo.click();
     return;
   }
-  if (['INPUT', 'TEXTAREA'].includes(document.activeElement.tagName)) return;
+  if (e.key === 'Escape') {
+    if (!settingsPanel.hidden || !qrOverlay.hidden || !changelogOverlay.hidden) {
+      setSettingsOpen(false);
+      qrOverlay.hidden = true;
+      changelogOverlay.hidden = true;
+      return;
+    }
+  }
+  if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
   if (e.key === 'f' || e.key === 'F')  { e.preventDefault(); toggleFullscreen(); return; }
   if (e.key === '?')                    { e.preventDefault(); shortcutsOverlay.hidden = !shortcutsOverlay.hidden; return; }
   if (e.key === 'ArrowLeft')  btnPrev.click();
@@ -474,7 +630,7 @@ document.getElementById('btn-centers').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
-  showToast('Centers aligned');
+  showToast(t('toastCenters'));
 });
 
 document.getElementById('btn-aspect').addEventListener('click', () => {
@@ -491,7 +647,7 @@ document.getElementById('btn-aspect').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
-  showToast('Aspect ratios aligned');
+  showToast(t('toastAspect'));
 });
 
 document.getElementById('btn-size').addEventListener('click', () => {
@@ -504,7 +660,7 @@ document.getElementById('btn-size').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
-  showToast('Sizes aligned');
+  showToast(t('toastSize'));
 });
 
 document.getElementById('btn-match').addEventListener('click', () => {
@@ -515,7 +671,7 @@ document.getElementById('btn-match').addEventListener('click', () => {
       entry.img.naturalWidth, entry.img.naturalHeight);
   });
   redraw();
-  showToast('All rects matched');
+  showToast(t('toastMatch'));
 });
 
 // ── All Figs ──────────────────────────────────────────────────────────────────
@@ -670,7 +826,7 @@ btnSave.addEventListener('click', async () => {
       return;  // user cancelled
     }
     btnSave.disabled = true;
-    btnSave.textContent = 'Saving…';
+    btnSave.textContent = t('saving');
     try {
       for (const entry of images) {
         const blob = await cropBlob(entry);
@@ -679,20 +835,20 @@ btnSave.addEventListener('click', async () => {
         await wr.write(blob);
         await wr.close();
       }
-      alert(`Saved ${images.length} image(s).`);
+      alert(t('savedN', { n: images.length }));
     } finally {
       btnSave.disabled = false;
-      btnSave.textContent = 'Save Cropped Images';
+      btnSave.textContent = t('saveCropped');
     }
 
   } else {
     // ZIP fallback — Safari / Firefox
     if (typeof JSZip === 'undefined') {
-      alert('JSZip failed to load. Check your internet connection.');
+      alert(t('jszipFailed'));
       return;
     }
     btnSave.disabled = true;
-    btnSave.textContent = 'Building ZIP…';
+    btnSave.textContent = t('buildingZip');
     try {
       const zip = new JSZip();
       for (const entry of images) {
@@ -707,22 +863,125 @@ btnSave.addEventListener('click', async () => {
       URL.revokeObjectURL(a.href);
     } finally {
       btnSave.disabled = false;
-      btnSave.textContent = 'Save Cropped Images';
+      btnSave.textContent = t('saveCropped');
     }
   }
 });
 
+// ── Settings sheet ────────────────────────────────────────────────────────────
+
+function setSettingsOpen(open) {
+  settingsPanel.hidden = !open;
+  sheetBackdrop.hidden = !open;
+  settingsBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+}
+
+settingsBtn.addEventListener('click', () => setSettingsOpen(settingsPanel.hidden));
+settingsClose.addEventListener('click', () => setSettingsOpen(false));
+sheetBackdrop.addEventListener('click', () => setSettingsOpen(false));
+
+langSelect.value = I18N.lang();
+langSelect.addEventListener('change', () => I18N.set(langSelect.value));
+
 // ── Version & QR ─────────────────────────────────────────────────────────────
 
-verEl.textContent = `Batch Image Cropper v${APP_VERSION}`;
+appVersion.textContent = `v${APP_VERSION}`;
+appVersion.addEventListener('click', openChangelog);
+
+// The QR images encode these strings; print the same constants so the two
+// cannot drift apart when one of them is edited.
 qrAppUrl.textContent = APP_URL;
 qrSrcUrl.textContent = SRC_URL;
 document.getElementById('qr-app-link').href = APP_URL;
 document.getElementById('qr-src-link').href = SRC_URL;
 
-btnQr.addEventListener('click', () => { qrOverlay.hidden = false; });
+btnQr.addEventListener('click', () => {
+  setSettingsOpen(false);
+  qrOverlay.hidden = false;
+});
 qrClose.addEventListener('click', () => { qrOverlay.hidden = true; });
 qrOverlay.addEventListener('click', e => { if (e.target === qrOverlay) qrOverlay.hidden = true; });
+
+// ── Changelog ─────────────────────────────────────────────────────────────────
+
+function readSeenVersion() {
+  try { return localStorage.getItem(SEEN_VERSION_KEY); } catch { return null; }
+}
+
+function writeSeenVersion() {
+  try { localStorage.setItem(SEEN_VERSION_KEY, APP_VERSION); } catch { /* ignore */ }
+}
+
+/** First visit ever: nothing is "new", so record the version quietly. A user
+ *  who already had this app's data but no seen-version is upgrading, and gets
+ *  the mark. Any key under the app prefix (other than seen-version) counts. */
+function initSeenVersion() {
+  if (readSeenVersion() !== null) return;
+  let hadData = false;
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(STORAGE_PREFIX) && key !== SEEN_VERSION_KEY) { hadData = true; break; }
+    }
+  } catch { /* ignore */ }
+  if (!hadData) writeSeenVersion();
+}
+
+function syncNewsMark() {
+  const hasNews = readSeenVersion() !== APP_VERSION;
+  settingsBtn.classList.toggle('has-news', hasNews);
+  changelogBtn.classList.toggle('has-news', hasNews);
+}
+
+function buildChangelog() {
+  changelogList.textContent = '';
+  for (const entry of CHANGELOG) {
+    const section = document.createElement('section');
+    section.className = 'changelog-entry';
+    const head = document.createElement('h3');
+    head.className = 'changelog-version';
+    head.textContent = `v${entry.version} (${entry.date})`;
+    section.appendChild(head);
+    const list = document.createElement('ul');
+    for (const item of entry.items) {
+      const li = document.createElement('li');
+      li.textContent = item[I18N.lang()] || item.ja;
+      list.appendChild(li);
+    }
+    section.appendChild(list);
+    changelogList.appendChild(section);
+  }
+}
+
+function openChangelog() {
+  setSettingsOpen(false);
+  changelogOverlay.hidden = false;
+  if (changelogList.scrollTop) changelogList.scrollTop = 0;
+  writeSeenVersion();
+  syncNewsMark();
+}
+
+initSeenVersion();
+buildChangelog();
+syncNewsMark();
+changelogBtn.addEventListener('click', openChangelog);
+changelogClose.addEventListener('click', () => { changelogOverlay.hidden = true; });
+changelogOverlay.addEventListener('click', e => {
+  if (e.target === changelogOverlay) changelogOverlay.hidden = true;
+});
+
+// ── Language ──────────────────────────────────────────────────────────────────
+
+/** Text that is built in JS rather than marked up with data-i18n. */
+function applyLanguage() {
+  langSelect.value = I18N.lang();
+  updateSaveNote();
+  if (!btnSave.disabled) btnSave.textContent = t('saveCropped');
+  buildChangelog();
+}
+
+I18N.onChange(applyLanguage);
+applyLanguage();
 
 // ── Zoom & Pan ────────────────────────────────────────────────────────────────
 
@@ -753,20 +1012,39 @@ canvas.addEventListener('dblclick', () => {
 
 // ── Fullscreen ────────────────────────────────────────────────────────────────
 
+/** ⛶ (and the F key) toggle full screen. Hidden where the browser cannot do it (iPhone). */
+function fullscreenElement() {
+  return document.fullscreenElement || document.webkitFullscreenElement || null;
+}
+
 function toggleFullscreen() {
-  if (!document.fullscreenElement) {
-    document.documentElement.requestFullscreen().catch(() => {});
+  const root = document.documentElement;
+  if (fullscreenElement()) {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) {
+      const p = exit.call(document);
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
   } else {
-    document.exitFullscreen().catch(() => {});
+    const req = root.requestFullscreen || root.webkitRequestFullscreen;
+    if (req) {
+      const p = req.call(root);
+      if (p && typeof p.catch === 'function') p.catch(() => {});
+    }
   }
 }
 
-document.addEventListener('fullscreenchange', () => {
-  btnFullscreen.textContent = document.fullscreenElement ? '⊡' : '⛶';
-  btnFullscreen.title = document.fullscreenElement ? 'Exit fullscreen (F)' : 'Toggle fullscreen (F)';
-});
+function initFullscreen() {
+  const root = document.documentElement;
+  btnFullscreen.hidden = !(root.requestFullscreen || root.webkitRequestFullscreen);
+  btnFullscreen.addEventListener('click', toggleFullscreen);
+  // Keep the existing glyph swap while in full screen.
+  const sync = () => { btnFullscreen.textContent = fullscreenElement() ? '⊡' : '⛶'; };
+  document.addEventListener('fullscreenchange', sync);
+  document.addEventListener('webkitfullscreenchange', sync);
+}
 
-btnFullscreen.addEventListener('click', toggleFullscreen);
+initFullscreen();
 
 // ── JSON export / import ──────────────────────────────────────────────────────
 
@@ -802,7 +1080,7 @@ jsonInput.addEventListener('change', e => {
       syncSpins();
       redraw();
     } catch {
-      alert('Invalid JSON file.');
+      alert(t('invalidJson'));
     }
     jsonInput.value = '';
   };
