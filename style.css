@@ -202,39 +202,29 @@ input[type="file"] { display: none; }
 .btn-allfigs { background: #c8b84a; color: #222; }
 .btn-save    { background: #5cb85c; color: #fff; margin-bottom: 0; }
 
-/* ── Sidebar footer (shortcuts button) ───────────────────────────────────── */
-
-#sec-footer {
-  margin-top: auto;
-  padding-top: 8px;
-  display: flex;
-  flex-direction: column;
-  gap: 5px;
-}
-
-#footer-btns {
-  display: flex;
-  gap: 6px;
-}
-
 /* App name + version: the same look in every yukmmz.github.io app.
-   Here the version sits under the name so both fit the sidebar width. */
+   The name takes the first row; the version sits under it on the left and
+   ?, ⛶, ⚙ on the right — three icons no longer fit beside the name in 238px. */
 .sidebar-head {
   display: flex;
-  align-items: center;
+  flex-direction: column;
   gap: 0;
-  margin-right: -4px;   /* let the icons use part of the sidebar padding */
-  padding: 2px 0 6px 0;
+  padding: 2px 0 4px 0;
   border-bottom: 1px solid var(--border);
 }
 
-.app-brand {
+.sidebar-head-row {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  margin-right: -4px;   /* let the icons use part of the sidebar padding */
+}
+
+.head-icons {
+  display: flex;
+  align-items: center;
   gap: 2px;
-  flex: 1 1 auto;
-  min-width: 0;
-  white-space: nowrap;
 }
 
 .app-title {
@@ -253,21 +243,8 @@ input[type="file"] { display: none; }
   opacity: .55;
   white-space: nowrap;
   cursor: pointer;
-  align-self: flex-start;
 }
 .app-version:hover { text-decoration: underline; }
-
-#btn-shortcuts {
-  background: #4a4a4a;
-  border: 1px solid #5a5a5a;
-  color: #aaa;
-  font-size: 11px;
-  padding: 3px 8px;
-  border-radius: 3px;
-  cursor: pointer;
-  flex-shrink: 0;
-}
-#btn-shortcuts:hover { background: #5a5a5a; color: #ddd; }
 
 /* ── QR overlay ─────────────────────────────────────────────────────────────── */
 
@@ -354,74 +331,6 @@ input[type="file"] { display: none; }
 
 #btn-export-json { background: #4a6a8a; color: #dde; }
 #btn-import-json { background: #3a5a6a; color: #dde; }
-
-/* ── Shortcuts overlay ───────────────────────────────────────────────────────── */
-
-#shortcuts-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 300;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: rgba(0, 0, 0, 0.78);
-}
-#shortcuts-overlay[hidden] { display: none; }
-
-#shortcuts-card {
-  background: #252525;
-  color: #ccc;
-  border-radius: 12px;
-  padding: 20px 26px 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  max-height: 88vh;
-  overflow-y: auto;
-  box-shadow: 0 12px 48px rgba(0, 0, 0, 0.65);
-  min-width: 340px;
-}
-
-#shortcuts-card h2 {
-  font-size: 10px;
-  font-weight: 600;
-  color: #666;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-  margin: 8px 0 2px;
-}
-#shortcuts-card h2:first-child { margin-top: 0; }
-
-.shortcuts-table {
-  border-collapse: collapse;
-  width: 100%;
-  font-size: 12px;
-}
-.shortcuts-table td {
-  padding: 4px 6px;
-  vertical-align: top;
-  line-height: 1.5;
-}
-.shortcuts-table td:first-child {
-  font-family: 'SF Mono', 'Fira Code', monospace;
-  color: #88aadd;
-  white-space: nowrap;
-  padding-right: 18px;
-}
-.shortcuts-table tr:nth-child(even) td { background: rgba(255,255,255,0.03); }
-
-#shortcuts-close {
-  background: #444;
-  color: #eee;
-  border: none;
-  border-radius: 6px;
-  padding: 7px 24px;
-  font-size: 13px;
-  cursor: pointer;
-  align-self: center;
-  margin-top: 10px;
-}
-#shortcuts-close:hover { background: #555; }
 
 /* ── Canvas ─────────────────────────────────────────────────────────────────── */
 
@@ -585,14 +494,14 @@ input[type="file"] { display: none; }
 /* A link styled as a button (「アプリ一覧を開く」). */
 a.btn { text-decoration: none; display: inline-block; }
 
-/* Muted icon buttons; narrower than the spec's 36px so the title fits the 238px sidebar. */
+/* Muted icon buttons (the spec's size; they sit on their own row under the name). */
 .btn-icon {
-  width: 27px;
-  height: 32px;
+  width: 36px;
+  height: 36px;
   padding: 0;
   border: none;
   background: transparent;
-  border-radius: 8px;
+  border-radius: 10px;
   color: var(--muted);
   font-size: 1.1rem;
   line-height: 1;
@@ -609,8 +518,20 @@ a.btn { text-decoration: none; display: inline-block; }
   overflow: visible;
 }
 
-#fullscreen-btn { font-size: 19px; }
+#help-btn { font-size: 20px; font-weight: 700; }
 #fullscreen-btn[hidden] { display: none; }
+.fs-icon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+#fullscreen-btn .fs-exit,
+#fullscreen-btn.is-fullscreen .fs-enter { display: none; }
+#fullscreen-btn.is-fullscreen .fs-exit { display: block; }
 
 /* ── Settings sheet ──────────────────────────────────────────────────────────── */
 
@@ -724,6 +645,47 @@ a.btn { text-decoration: none; display: inline-block; }
 }
 
 #changelogClose { margin-top: 12px; align-self: center; }
+
+/* ── How to use overlay (same card as the changelog) ─────────────────────── */
+
+#helpOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+}
+#helpOverlay[hidden] { display: none; }
+
+.help-body { line-height: 1.6; }
+.help-body h3 {
+  font-size: 13px;
+  color: var(--text);
+  margin: 14px 0 4px;
+}
+.help-body h3:first-child { margin-top: 0; }
+.help-body p { margin: 6px 0; }
+.help-body ol { margin: 4px 0; padding-left: 1.4em; }
+.help-body li { margin: 3px 0; }
+.help-body strong, .help-body code { color: var(--text); }
+.help-body .note { font-size: 12px; color: var(--text-sub); }
+.help-keys { border-collapse: collapse; width: 100%; font-size: 12px; }
+.help-keys td { padding: 3px 6px; vertical-align: top; }
+.help-keys td:first-child { white-space: nowrap; color: #88aadd; padding-right: 16px; width: 1%; }
+.help-keys tr:nth-child(even) td { background: rgba(255, 255, 255, 0.03); }
+.help-body kbd {
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  font-size: 11px;
+  padding: 0 4px;
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  background: #333;
+  color: #cde;
+}
+
+#helpClose { margin-top: 12px; align-self: center; }
 
 /* A small dot on ⚙ and on the changelog button until the new version's
  * changelog has been opened once. */

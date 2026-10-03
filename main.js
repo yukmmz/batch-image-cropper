@@ -4,7 +4,7 @@ const HANDLE_R   = 6;
 const HANDLE_HIT = 10;
 const UNDO_LIMIT = 50;
 
-const APP_VERSION = '1.1.0';
+const APP_VERSION = '1.2.0';
 const APP_URL     = 'https://yukmmz.github.io/batch-image-cropper/';
 const SRC_URL     = 'https://github.com/yukmmz/batch-image-cropper';
 
@@ -18,6 +18,14 @@ const STORAGE_PREFIX   = 'batch-image-cropper/';
  * version under the app name. Bumping APP_VERSION means adding an entry here;
  * the first entry must match APP_VERSION. Written for users, in both languages. */
 const CHANGELOG = [
+  { version: '1.2.0', date: '2026-10-01', items: [
+    { ja: '使い方の窓を追加しました。サイドバー上端の ? ボタン（または ? キー）で開きます。キーボードショートカットの一覧もここにまとめました',
+      en: 'Added a "How to use" window, opened by the ? button at the top of the sidebar (or the ? key); the keyboard shortcut list is now part of it' },
+    { ja: 'サイドバー下の ? ボタン（ショートカット一覧）は、上端の ? に置き換えました',
+      en: 'The ? button at the bottom of the sidebar (shortcut list) was replaced by the ? at the top' },
+    { ja: '全画面表示中は、全画面ボタンが「縮小」の形に変わるようにしました',
+      en: 'While in full screen, the full-screen button changes to a "shrink" icon' },
+  ] },
   { version: '1.1.0', date: '2026-10-01', items: [
     { ja: 'サイドバーの一番上にアプリ名とバージョンを表示するようにしました。バージョンを押すと更新履歴が開きます',
       en: 'The app name and version are shown at the top of the sidebar; click the version to open this changelog' },
@@ -51,9 +59,10 @@ const CHANGELOG = [
 const STRINGS = {
   ja: {
     'c.settings': '設定', 'c.close': '閉じる', 'c.language': '言語', 'c.share': '共有',
+    prevImage: '前の画像（←）', nextImage: '次の画像（→）',
     'c.showQr': 'QR コードを表示', 'c.changelog': '更新履歴', 'c.showChangelog': '表示',
     'c.otherApps': '他のアプリ', 'c.openPortal': 'アプリ一覧を開く', 'c.data': 'データ',
-    'c.clearData': '保存データを消す', 'c.fullscreen': '全画面表示',
+    'c.clearData': '保存データを消す', 'c.fullscreen': '全画面表示', 'c.exitFullscreen': '全画面を終了', 'c.help': '使い方',
     loadImages: '画像を読み込む', dropHint: 'またはどこにでもドラッグ＆ドロップ',
     dropVeil: 'ここに画像をドロップ',
     cropRect: '切り抜き枠（この画像）',
@@ -76,27 +85,56 @@ const STRINGS = {
     toastAspect: '縦横比をそろえました', toastSize: '大きさをそろえました',
     toastMatch: 'すべての枠を同じにしました',
     allFigsHead: '全画像 — クリックで移動',
-    shortcutsTitle: 'キーボードショートカット（?）',
-    scNavigation: '移動', scPrevNext: '前 / 次の画像', scUndo: '元に戻す',
-    scFullscreen: '全画面表示の切り替え', scShortcuts: 'ショートカット一覧の表示 / 非表示',
-    scCropRect: '切り抜き枠',
-    scDragBody: '枠の内側をドラッグ', scMoveCrop: '枠を移動',
-    scDragCorner: '角をドラッグ', scResizeCrop: '枠をリサイズ',
-    scShiftResize: 'Shift + リサイズ', scLockAspect: '縦横比を固定',
-    scCtrlResize: 'Ctrl / Cmd + リサイズ', scFromCenter: '中心からリサイズ',
-    scShiftMove: 'Shift + 移動', scAxis: '縦か横だけに移動',
-    scZoomPan: '拡大・移動',
-    scCtrlScroll: 'Ctrl / Cmd + スクロール', scZoom: '拡大 / 縮小',
-    scScroll: 'スクロール', scPan: '表示位置を移動',
-    scDblClick: 'キャンバスをダブルクリック', scResetView: '拡大と位置を元に戻す',
-    scPinch: 'ピンチ（タッチ）', scPinchZoom: '拡大 / 縮小',
-    scTouchDrag: '1 本指でドラッグ', scTouchMove: '枠を移動 / リサイズ',
+    help:
+      '<h3>使い方</h3>' +
+      '<ol>' +
+      '<li><strong>画像を読み込む</strong>を押すか、画像ファイルを画面のどこかにドラッグ＆ドロップします（複数可）。</li>' +
+      '<li>赤い枠が切り抜く範囲です。枠の内側をドラッグして移動、角をドラッグしてリサイズします。' +
+      '左の X / Y / W / H に数値を入れても変えられます。</li>' +
+      '<li>枠は<strong>画像ごとに別々</strong>です。◀ / ▶（または ← / → キー）で画像を切り替えます。' +
+      '<strong>全画像を一覧</strong>で全体を見て、押した画像へ移動できます。</li>' +
+      '<li><strong>今の画像に合わせる</strong>で、今の画像の枠を基準に全画像の枠をそろえます' +
+      '（中心 / 縦横比 / 大きさ / すべて同じ）。</li>' +
+      '<li><strong>切り抜いた画像を保存</strong>で書き出します。Chrome / Edge は選んだフォルダへ直接、' +
+      'Safari / Firefox は .zip のダウンロードです。ファイル名には接尾辞（初期値 <code>_cropped</code>）が付きます。</li>' +
+      '</ol>' +
+      '<p>枠の位置は <strong>切り抜きデータ</strong> から JSON で書き出し・読み込みできます（ファイル名で対応づけ）。</p>' +
+      '<h3>キーボードショートカット</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>前 / 次の画像</td></tr>' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Z</kbd></td><td>元に戻す</td></tr>' +
+      '<tr><td><kbd>F</kbd></td><td>全画面表示の切り替え</td></tr>' +
+      '<tr><td><kbd>?</kbd></td><td>この使い方を開く</td></tr>' +
+      '<tr><td><kbd>Esc</kbd></td><td>開いている窓を閉じる</td></tr>' +
+      '</table>' +
+      '<h3>切り抜き枠の操作</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td>枠の内側をドラッグ</td><td>枠を移動</td></tr>' +
+      '<tr><td>角をドラッグ</td><td>枠をリサイズ</td></tr>' +
+      '<tr><td><kbd>Shift</kbd> + リサイズ</td><td>縦横比を固定</td></tr>' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + リサイズ</td><td>中心からリサイズ</td></tr>' +
+      '<tr><td><kbd>Shift</kbd> + 移動</td><td>縦か横だけに移動</td></tr>' +
+      '</table>' +
+      '<h3>拡大・移動</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + スクロール</td><td>拡大 / 縮小</td></tr>' +
+      '<tr><td>スクロール</td><td>表示位置を移動</td></tr>' +
+      '<tr><td>キャンバスをダブルクリック</td><td>拡大と位置を元に戻す</td></tr>' +
+      '</table>' +
+      '<h3>iPad / タッチ操作</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td>1 本指でドラッグ</td><td>枠を移動 / リサイズ</td></tr>' +
+      '<tr><td>ピンチ</td><td>拡大 / 縮小</td></tr>' +
+      '</table>' +
+      '<p class="note">Safari（iPad / iPhone）では保存は .zip のダウンロードになります。</p>' +
+      '<p class="note">画像はこのブラウザの中だけで処理され、サーバーへは送信されません。</p>',
   },
   en: {
     'c.settings': 'Settings', 'c.close': 'Close', 'c.language': 'Language', 'c.share': 'Share',
+    prevImage: 'Previous image (←)', nextImage: 'Next image (→)',
     'c.showQr': 'Show QR codes', 'c.changelog': 'Changelog', 'c.showChangelog': 'Show',
     'c.otherApps': 'Other apps', 'c.openPortal': 'Open app list', 'c.data': 'Data',
-    'c.clearData': 'Clear saved data', 'c.fullscreen': 'Full screen',
+    'c.clearData': 'Clear saved data', 'c.fullscreen': 'Full screen', 'c.exitFullscreen': 'Exit full screen', 'c.help': 'How to use',
     loadImages: 'Load Images', dropHint: 'or drag & drop anywhere',
     dropVeil: 'Drop images here',
     cropRect: 'Crop Rect (this image)',
@@ -119,21 +157,49 @@ const STRINGS = {
     toastAspect: 'Aspect ratios aligned', toastSize: 'Sizes aligned',
     toastMatch: 'All rects matched',
     allFigsHead: 'All Figures — click to navigate',
-    shortcutsTitle: 'Keyboard shortcuts (?)',
-    scNavigation: 'Navigation', scPrevNext: 'Previous / next image', scUndo: 'Undo',
-    scFullscreen: 'Toggle fullscreen', scShortcuts: 'Show / hide shortcuts',
-    scCropRect: 'Crop Rect',
-    scDragBody: 'Drag rect body', scMoveCrop: 'Move crop',
-    scDragCorner: 'Drag corner handle', scResizeCrop: 'Resize crop',
-    scShiftResize: 'Shift + resize', scLockAspect: 'Lock aspect ratio',
-    scCtrlResize: 'Ctrl / Cmd + resize', scFromCenter: 'Resize from center',
-    scShiftMove: 'Shift + move', scAxis: 'Constrain to H or V axis',
-    scZoomPan: 'Zoom & Pan',
-    scCtrlScroll: 'Ctrl / Cmd + Scroll', scZoom: 'Zoom in / out',
-    scScroll: 'Scroll', scPan: 'Pan',
-    scDblClick: 'Double-click canvas', scResetView: 'Reset zoom & pan',
-    scPinch: 'Pinch (touch)', scPinchZoom: 'Zoom',
-    scTouchDrag: 'Single touch drag', scTouchMove: 'Move / resize crop',
+    help:
+      '<h3>How to use</h3>' +
+      '<ol>' +
+      '<li>Click <strong>Load Images</strong> or drag &amp; drop image files anywhere on the page (several at once is fine).</li>' +
+      '<li>The red rectangle is the crop area. Drag inside it to move it, drag a corner to resize it, ' +
+      'or type values in X / Y / W / H.</li>' +
+      '<li>Each image has <strong>its own rectangle</strong>. Switch images with ◀ / ▶ (or the ← / → keys). ' +
+      '<strong>All Figs</strong> shows every image; click one to go to it.</li>' +
+      '<li><strong>Align to Current Image</strong> makes every rectangle follow the current one ' +
+      '(centers / aspect ratio / size / match all).</li>' +
+      '<li><strong>Save Cropped Images</strong> writes the results: straight to a chosen folder in Chrome / Edge, ' +
+      'as a .zip download in Safari / Firefox. File names get the suffix (default <code>_cropped</code>).</li>' +
+      '</ol>' +
+      '<p><strong>Crop Data</strong> exports and imports the rectangles as JSON (matched by file name).</p>' +
+      '<h3>Keyboard shortcuts</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td><kbd>←</kbd> / <kbd>→</kbd></td><td>Previous / next image</td></tr>' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + <kbd>Z</kbd></td><td>Undo</td></tr>' +
+      '<tr><td><kbd>F</kbd></td><td>Toggle full screen</td></tr>' +
+      '<tr><td><kbd>?</kbd></td><td>Open this help</td></tr>' +
+      '<tr><td><kbd>Esc</kbd></td><td>Close the open window</td></tr>' +
+      '</table>' +
+      '<h3>Crop rectangle</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td>Drag inside the rectangle</td><td>Move it</td></tr>' +
+      '<tr><td>Drag a corner</td><td>Resize it</td></tr>' +
+      '<tr><td><kbd>Shift</kbd> + resize</td><td>Lock the aspect ratio</td></tr>' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + resize</td><td>Resize from the center</td></tr>' +
+      '<tr><td><kbd>Shift</kbd> + move</td><td>Move along H or V only</td></tr>' +
+      '</table>' +
+      '<h3>Zoom &amp; pan</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td><kbd>Ctrl</kbd> / <kbd>Cmd</kbd> + scroll</td><td>Zoom in / out</td></tr>' +
+      '<tr><td>Scroll</td><td>Pan</td></tr>' +
+      '<tr><td>Double-click the canvas</td><td>Reset zoom &amp; pan</td></tr>' +
+      '</table>' +
+      '<h3>iPad / touch</h3>' +
+      '<table class="help-keys">' +
+      '<tr><td>One-finger drag</td><td>Move / resize the rectangle</td></tr>' +
+      '<tr><td>Pinch</td><td>Zoom in / out</td></tr>' +
+      '</table>' +
+      '<p class="note">In Safari (iPad / iPhone) saving downloads a .zip file.</p>' +
+      '<p class="note">Images are processed only in this browser and never sent to a server.</p>',
   },
 };
 
@@ -207,9 +273,9 @@ const btnExportJson    = document.getElementById('btn-export-json');
 const btnImportJson    = document.getElementById('btn-import-json');
 const jsonInput        = document.getElementById('json-input');
 const btnFullscreen    = document.getElementById('fullscreen-btn');
-const btnShortcuts     = document.getElementById('btn-shortcuts');
-const shortcutsOverlay = document.getElementById('shortcuts-overlay');
-const shortcutsClose   = document.getElementById('shortcuts-close');
+const helpBtn          = document.getElementById('help-btn');
+const helpOverlay      = document.getElementById('helpOverlay');
+const helpClose        = document.getElementById('helpClose');
 
 const settingsBtn      = document.getElementById('settings-btn');
 const settingsPanel    = document.getElementById('settings-panel');
@@ -594,16 +660,17 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape') {
-    if (!settingsPanel.hidden || !qrOverlay.hidden || !changelogOverlay.hidden) {
+    if (!settingsPanel.hidden || !qrOverlay.hidden || !changelogOverlay.hidden || !helpOverlay.hidden) {
       setSettingsOpen(false);
       qrOverlay.hidden = true;
       changelogOverlay.hidden = true;
+      helpOverlay.hidden = true;
       return;
     }
   }
   if (['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement.tagName)) return;
   if (e.key === 'f' || e.key === 'F')  { e.preventDefault(); toggleFullscreen(); return; }
-  if (e.key === '?')                    { e.preventDefault(); shortcutsOverlay.hidden = !shortcutsOverlay.hidden; return; }
+  if (e.key === '?')                    { e.preventDefault(); openHelp(); return; }
   if (e.key === 'ArrowLeft')  btnPrev.click();
   if (e.key === 'ArrowRight') btnNext.click();
 });
@@ -977,6 +1044,7 @@ function applyLanguage() {
   langSelect.value = I18N.lang();
   updateSaveNote();
   if (!btnSave.disabled) btnSave.textContent = t('saveCropped');
+  syncFullscreenBtn();
   buildChangelog();
 }
 
@@ -1034,14 +1102,24 @@ function toggleFullscreen() {
   }
 }
 
+/** Swap the icon and label so the button shows what a press will do
+ * (expand when windowed, shrink while full screen). Also runs when the user
+ * leaves full screen with Esc, which never touches the button. */
+function syncFullscreenBtn() {
+  const on = !!fullscreenElement();
+  const label = t(on ? 'c.exitFullscreen' : 'c.fullscreen');
+  btnFullscreen.classList.toggle('is-fullscreen', on);
+  btnFullscreen.title = label;
+  btnFullscreen.setAttribute('aria-label', label);
+}
+
 function initFullscreen() {
   const root = document.documentElement;
   btnFullscreen.hidden = !(root.requestFullscreen || root.webkitRequestFullscreen);
   btnFullscreen.addEventListener('click', toggleFullscreen);
-  // Keep the existing glyph swap while in full screen.
-  const sync = () => { btnFullscreen.textContent = fullscreenElement() ? '⊡' : '⛶'; };
-  document.addEventListener('fullscreenchange', sync);
-  document.addEventListener('webkitfullscreenchange', sync);
+  document.addEventListener('fullscreenchange', syncFullscreenBtn);
+  document.addEventListener('webkitfullscreenchange', syncFullscreenBtn);
+  syncFullscreenBtn();
 }
 
 initFullscreen();
@@ -1087,12 +1165,22 @@ jsonInput.addEventListener('change', e => {
   reader.readAsText(file);
 });
 
-// ── Shortcuts overlay ─────────────────────────────────────────────────────────
+// ── How to use ─────────────────────────────────────────────────────────────
 
-btnShortcuts.addEventListener('click', () => { shortcutsOverlay.hidden = false; });
-shortcutsClose.addEventListener('click', () => { shortcutsOverlay.hidden = true; });
-shortcutsOverlay.addEventListener('click', e => {
-  if (e.target === shortcutsOverlay) shortcutsOverlay.hidden = true;
+/** The "How to use" window, opened by the ? button at the top of the sidebar or the ? key. */
+function openHelp() {
+  setSettingsOpen(false);
+  qrOverlay.hidden = true;
+  changelogOverlay.hidden = true;
+  helpOverlay.hidden = false;
+  const body = helpOverlay.querySelector('.help-body');
+  if (body.scrollTop) body.scrollTop = 0;
+}
+
+helpBtn.addEventListener('click', openHelp);
+helpClose.addEventListener('click', () => { helpOverlay.hidden = true; });
+helpOverlay.addEventListener('click', e => {
+  if (e.target === helpOverlay) helpOverlay.hidden = true;
 });
 
 // ── Touch support ─────────────────────────────────────────────────────────────

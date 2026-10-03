@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Batch Image Cropper</title>
   <link rel="icon" type="image/png" href="icon-192.png">
+  <link rel="apple-touch-icon" href="icon-192.png">
+  <meta name="description" content="Crop many images at once in your browser, each with its own crop box. No upload, no server.">
+  <!-- Link previews (LINE / Slack / X). og:image must be an absolute URL. -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Batch Image Cropper">
+  <meta property="og:description" content="Crop many images at once in your browser, each with its own crop box. No upload, no server.">
+  <meta property="og:url" content="https://yukmmz.github.io/batch-image-cropper/">
+  <meta property="og:image" content="https://yukmmz.github.io/batch-image-cropper/icon-192.png">
+  <meta name="twitter:card" content="summary">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -12,18 +21,27 @@
 
     <aside id="sidebar">
 
-      <!-- App name (version directly below it), then ⛶ and ⚙ on the same row -->
+      <!-- App name on its own row; below it the version (left) and ⛶, ?, ⚙ (right).
+           The three icons no longer fit next to the name in the 238px sidebar. -->
       <div class="sidebar-head">
-        <div class="app-brand">
-          <h1 class="app-title">Batch Image Cropper</h1>
+        <h1 class="app-title">Batch Image Cropper</h1>
+        <div class="sidebar-head-row">
           <span id="appVersion" class="app-version"></span>
+          <div class="head-icons">
+            <!-- Label and icon follow the state in syncFullscreenBtn(): corners out = expand, corners in = shrink -->
+            <button id="fullscreen-btn" class="btn btn-icon" type="button"
+                    title="Full screen" aria-label="Full screen">
+              <svg class="fs-icon fs-enter" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M15 4h5v5M20 15v5h-5M9 20H4v-5"/></svg>
+              <svg class="fs-icon fs-exit" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4v5H4M15 4v5h5M20 15h-5v5M4 15h5v5"/></svg>
+            </button>
+            <button id="help-btn" class="btn btn-icon" type="button"
+                    data-i18n-title="c.help" data-i18n-aria-label="c.help"
+                    title="How to use" aria-label="How to use">?</button>
+            <button id="settings-btn" class="btn btn-icon" type="button"
+                    data-i18n-title="c.settings" data-i18n-aria-label="c.settings"
+                    title="Settings" aria-label="Settings" aria-expanded="false">⚙</button>
+          </div>
         </div>
-        <button id="fullscreen-btn" class="btn btn-icon" type="button"
-                data-i18n-title="c.fullscreen" data-i18n-aria-label="c.fullscreen"
-                title="Full screen" aria-label="Full screen">⛶</button>
-        <button id="settings-btn" class="btn btn-icon" type="button"
-                data-i18n-title="c.settings" data-i18n-aria-label="c.settings"
-                title="Settings" aria-label="Settings" aria-expanded="false">⚙</button>
       </div>
 
       <!-- Load -->
@@ -36,9 +54,9 @@
       <!-- Navigation -->
       <div class="section" id="sec-nav" style="display:none">
         <div class="nav-row">
-          <button id="btn-prev">&#9664;</button>
+          <button id="btn-prev" data-i18n-aria-label="prevImage" data-i18n-title="prevImage" aria-label="Previous image (←)" title="Previous image (←)">&#9664;</button>
           <span id="nav-counter">1 / 1</span>
-          <button id="btn-next">&#9654;</button>
+          <button id="btn-next" data-i18n-aria-label="nextImage" data-i18n-title="nextImage" aria-label="Next image (→)" title="Next image (→)">&#9654;</button>
         </div>
         <div id="nav-name" class="nav-name"></div>
       </div>
@@ -98,13 +116,6 @@
         <div id="save-note" class="sub-hint" style="margin-top:4px"></div>
       </div>
 
-      <!-- Shortcuts (always visible at sidebar bottom) -->
-      <div id="sec-footer">
-        <div id="footer-btns">
-          <button id="btn-shortcuts" data-i18n-title="shortcutsTitle" title="Keyboard shortcuts (?)">?</button>
-        </div>
-      </div>
-
     </aside>
 
     <main id="canvas-wrap">
@@ -124,7 +135,7 @@
     <div class="sheet-head">
       <h2 class="sheet-title" data-i18n="c.settings">Settings</h2>
       <button id="settings-close" class="btn btn-icon" type="button"
-              data-i18n-aria-label="c.close" aria-label="Close">✕</button>
+              data-i18n-aria-label="c.close" data-i18n-title="c.close" aria-label="Close" title="Close">✕</button>
     </div>
 
     <div class="sheet-row">
@@ -189,43 +200,23 @@
     <div id="modal-box">
       <div id="modal-head">
         <span data-i18n="allFigsHead">All Figures &mdash; click to navigate</span>
-        <button id="modal-close" data-i18n-aria-label="c.close" aria-label="Close">&times;</button>
+        <button id="modal-close" data-i18n-aria-label="c.close" data-i18n-title="c.close" aria-label="Close" title="Close">&times;</button>
       </div>
       <div id="modal-body"></div>
     </div>
   </div>
 
-  <!-- Shortcuts overlay -->
-  <div id="shortcuts-overlay" hidden role="dialog" aria-modal="true">
-    <div id="shortcuts-card">
-      <h2 data-i18n="scNavigation">Navigation</h2>
-      <table class="shortcuts-table">
-        <tr><td>← / →</td><td data-i18n="scPrevNext">Previous / next image</td></tr>
-        <tr><td>Ctrl / Cmd + Z</td><td data-i18n="scUndo">Undo</td></tr>
-        <tr><td>F</td><td data-i18n="scFullscreen">Toggle fullscreen</td></tr>
-        <tr><td>?</td><td data-i18n="scShortcuts">Show / hide shortcuts</td></tr>
-      </table>
-      <h2 data-i18n="scCropRect">Crop Rect</h2>
-      <table class="shortcuts-table">
-        <tr><td data-i18n="scDragBody">Drag rect body</td><td data-i18n="scMoveCrop">Move crop</td></tr>
-        <tr><td data-i18n="scDragCorner">Drag corner handle</td><td data-i18n="scResizeCrop">Resize crop</td></tr>
-        <tr><td data-i18n="scShiftResize">Shift + resize</td><td data-i18n="scLockAspect">Lock aspect ratio</td></tr>
-        <tr><td data-i18n="scCtrlResize">Ctrl / Cmd + resize</td><td data-i18n="scFromCenter">Resize from center</td></tr>
-        <tr><td data-i18n="scShiftMove">Shift + move</td><td data-i18n="scAxis">Constrain to H or V axis</td></tr>
-      </table>
-      <h2 data-i18n="scZoomPan">Zoom &amp; Pan</h2>
-      <table class="shortcuts-table">
-        <tr><td data-i18n="scCtrlScroll">Ctrl / Cmd + Scroll</td><td data-i18n="scZoom">Zoom in / out</td></tr>
-        <tr><td data-i18n="scScroll">Scroll</td><td data-i18n="scPan">Pan</td></tr>
-        <tr><td data-i18n="scDblClick">Double-click canvas</td><td data-i18n="scResetView">Reset zoom &amp; pan</td></tr>
-        <tr><td data-i18n="scPinch">Pinch (touch)</td><td data-i18n="scPinchZoom">Zoom</td></tr>
-        <tr><td data-i18n="scTouchDrag">Single touch drag</td><td data-i18n="scTouchMove">Move / resize crop</td></tr>
-      </table>
-      <button id="shortcuts-close" data-i18n="c.close">Close</button>
+  <!-- How to use: opened by the ? button at the top of the sidebar or the ? key.
+       The text (usage, shortcuts, touch) is STRINGS.help in main.js. -->
+  <div id="helpOverlay" hidden>
+    <div class="changelog-card help-card" role="dialog" aria-modal="true" data-i18n-aria-label="c.help" aria-label="How to use">
+      <h2 class="changelog-title" data-i18n="c.help">How to use</h2>
+      <div class="changelog-list help-body" data-i18n-html="help"></div>
+      <button id="helpClose" class="btn" type="button" data-i18n="c.close">Close</button>
     </div>
   </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
+  <script src="vendor/jszip.min.js"></script>  <!-- JSZip 3.10.1 (MIT), bundled instead of a CDN -->
   <script src="i18n.js"></script>
   <script src="main.js"></script>
 </body>
