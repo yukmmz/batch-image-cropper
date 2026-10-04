@@ -204,7 +204,7 @@ input[type="file"] { display: none; }
 
 /* App name + version: the same look in every yukmmz.github.io app.
    The name takes the first row; the version sits under it on the left and
-   ?, ⛶, ⚙ on the right — three icons no longer fit beside the name in 238px. */
+   ⛶, FB, ?, ⚙ on the right — the icons do not fit beside the name in 238px. */
 .sidebar-head {
   display: flex;
   flex-direction: column;
@@ -519,6 +519,17 @@ a.btn { text-decoration: none; display: inline-block; }
 }
 
 #help-btn { font-size: 20px; font-weight: 700; }
+
+/* "FB" packed edge to edge inside the 36x36 key: bold, squeezed sideways, no extra spacing.
+   Sized in px (the 1.8rem of the spec at a 16px root), since this app's root font is 13px. */
+#feedback-btn .fb-mark {
+  display: inline-block;
+  font-size: 23.04px;
+  font-weight: 384;
+  letter-spacing: -.05em;
+  line-height: 1;
+  transform: scaleX(.74);
+}
 #fullscreen-btn[hidden] { display: none; }
 .fs-icon {
   width: 20px;
@@ -702,3 +713,41 @@ a.btn { text-decoration: none; display: inline-block; }
   border-radius: 50%;
   background: var(--danger);
 }
+
+/* ── Feedback overlay (same card as the changelog) ──────────────────────── */
+
+#feedbackOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.75);
+}
+#feedbackOverlay[hidden] { display: none; }
+
+.feedback-card { gap: 8px; }
+.feedback-card .changelog-title { margin-bottom: 0; }
+.feedback-lead, .feedback-note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.5; }
+.feedback-message, .feedback-contact {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--text);
+  user-select: text;
+}
+.feedback-message:focus, .feedback-contact:focus { outline: 1px solid var(--accent); border-color: var(--accent); }
+.feedback-message { resize: vertical; min-height: 120px; }
+.feedback-hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.feedback-status { margin: 0; min-height: 1.2em; font-size: 12px; font-weight: 700; }
+.feedback-status.ok { color: #4ade80; }
+.feedback-status.err { color: var(--danger); }
+.feedback-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+#feedbackSend { background: var(--accent); border-color: var(--accent); color: #fff; }
+#feedbackSend:disabled { opacity: .6; }

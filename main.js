@@ -4,9 +4,13 @@ const HANDLE_R   = 6;
 const HANDLE_HIT = 10;
 const UNDO_LIMIT = 50;
 
-const APP_VERSION = '1.2.0';
+const APP_VERSION = '1.3.0';
 const APP_URL     = 'https://yukmmz.github.io/batch-image-cropper/';
 const SRC_URL     = 'https://github.com/yukmmz/batch-image-cropper';
+/* Shared feedback endpoint (Google Apps Script web app, one for every yukmmz.github.io app).
+ * Public on purpose: it can only append a row to a sheet and post to a Discord channel. */
+const FEEDBACK_URL = 'https://script.google.com/macros/s/AKfycbxFJ-rTK2e5h05r6_j0RJJu-1Fo4Or3nsAnYcnGXC2i9I8FEdOIbNaXI1BfjunkQHEP/exec';
+const APP_ID       = 'batch-image-cropper';
 
 const LANG_KEY         = 'batch-image-cropper/lang';
 const SEEN_VERSION_KEY = 'batch-image-cropper/seen-version';
@@ -18,6 +22,10 @@ const STORAGE_PREFIX   = 'batch-image-cropper/';
  * version under the app name. Bumping APP_VERSION means adding an entry here;
  * the first entry must match APP_VERSION. Written for users, in both languages. */
 const CHANGELOG = [
+  { version: '1.3.0', date: '2026-10-04', items: [
+    { ja: 'サイドバー上端に「FB」ボタンを追加しました。ご意見・不具合の報告を開発者に送れます',
+      en: 'New "FB" button at the top of the sidebar: send feedback or a bug report to the developer' },
+  ] },
   { version: '1.2.0', date: '2026-10-01', items: [
     { ja: '使い方の窓を追加しました。サイドバー上端の ? ボタン（または ? キー）で開きます。キーボードショートカットの一覧もここにまとめました',
       en: 'Added a "How to use" window, opened by the ? button at the top of the sidebar (or the ? key); the keyboard shortcut list is now part of it' },
@@ -63,6 +71,12 @@ const STRINGS = {
     'c.showQr': 'QR コードを表示', 'c.changelog': '更新履歴', 'c.showChangelog': '表示',
     'c.otherApps': '他のアプリ', 'c.openPortal': 'アプリ一覧を開く', 'c.data': 'データ',
     'c.clearData': '保存データを消す', 'c.fullscreen': '全画面表示', 'c.exitFullscreen': '全画面を終了', 'c.help': '使い方',
+    'c.feedback': 'フィードバックを送る', 'c.feedbackLead': 'ご意見・ご要望・不具合の報告をお寄せください。',
+    'c.feedbackMessage': 'フィードバックの内容', 'c.feedbackPlaceholder': '使ってみた感想、困ったこと、ほしい機能など',
+    'c.feedbackContact': '連絡先（任意・返信がほしい場合）',
+    'c.feedbackNote': '送信を押したときに、書いた内容とアプリ名・バージョン・表示言語だけを開発者に送ります。',
+    'c.feedbackSend': '送信', 'c.feedbackSending': '送信中…', 'c.feedbackThanks': '送信しました。ありがとうございます！',
+    'c.feedbackEmpty': '内容を入力してください。', 'c.feedbackError': '送信できませんでした。時間をおいてもう一度お試しください。',
     loadImages: '画像を読み込む', dropHint: 'またはどこにでもドラッグ＆ドロップ',
     dropVeil: 'ここに画像をドロップ',
     cropRect: '切り抜き枠（この画像）',
@@ -135,6 +149,12 @@ const STRINGS = {
     'c.showQr': 'Show QR codes', 'c.changelog': 'Changelog', 'c.showChangelog': 'Show',
     'c.otherApps': 'Other apps', 'c.openPortal': 'Open app list', 'c.data': 'Data',
     'c.clearData': 'Clear saved data', 'c.fullscreen': 'Full screen', 'c.exitFullscreen': 'Exit full screen', 'c.help': 'How to use',
+    'c.feedback': 'Send feedback', 'c.feedbackLead': 'Comments, requests and bug reports are welcome.',
+    'c.feedbackMessage': 'Your feedback', 'c.feedbackPlaceholder': 'What you liked, what was hard, what you would like to see…',
+    'c.feedbackContact': 'Contact (optional, if you would like a reply)',
+    'c.feedbackNote': 'Only what you write, plus the app name, version and display language, is sent to the developer when you press Send.',
+    'c.feedbackSend': 'Send', 'c.feedbackSending': 'Sending…', 'c.feedbackThanks': 'Sent. Thank you!',
+    'c.feedbackEmpty': 'Please write something first.', 'c.feedbackError': 'Could not send. Please try again later.',
     loadImages: 'Load Images', dropHint: 'or drag & drop anywhere',
     dropVeil: 'Drop images here',
     cropRect: 'Crop Rect (this image)',
@@ -276,6 +296,15 @@ const btnFullscreen    = document.getElementById('fullscreen-btn');
 const helpBtn          = document.getElementById('help-btn');
 const helpOverlay      = document.getElementById('helpOverlay');
 const helpClose        = document.getElementById('helpClose');
+const feedbackBtn      = document.getElementById('feedback-btn');
+const feedbackOverlay  = document.getElementById('feedbackOverlay');
+const feedbackForm     = document.getElementById('feedbackForm');
+const feedbackMessage  = document.getElementById('feedbackMessage');
+const feedbackContact  = document.getElementById('feedbackContact');
+const feedbackWebsite  = document.getElementById('feedbackWebsite');
+const feedbackStatus   = document.getElementById('feedbackStatus');
+const feedbackSend     = document.getElementById('feedbackSend');
+const feedbackClose    = document.getElementById('feedbackClose');
 
 const settingsBtn      = document.getElementById('settings-btn');
 const settingsPanel    = document.getElementById('settings-panel');
@@ -660,11 +689,13 @@ document.addEventListener('keydown', e => {
     return;
   }
   if (e.key === 'Escape') {
-    if (!settingsPanel.hidden || !qrOverlay.hidden || !changelogOverlay.hidden || !helpOverlay.hidden) {
+    if (!settingsPanel.hidden || !qrOverlay.hidden || !changelogOverlay.hidden || !helpOverlay.hidden ||
+        !feedbackOverlay.hidden) {
       setSettingsOpen(false);
       qrOverlay.hidden = true;
       changelogOverlay.hidden = true;
       helpOverlay.hidden = true;
+      feedbackOverlay.hidden = true;
       return;
     }
   }
@@ -1172,6 +1203,7 @@ function openHelp() {
   setSettingsOpen(false);
   qrOverlay.hidden = true;
   changelogOverlay.hidden = true;
+  feedbackOverlay.hidden = true;
   helpOverlay.hidden = false;
   const body = helpOverlay.querySelector('.help-body');
   if (body.scrollTop) body.scrollTop = 0;
@@ -1181,6 +1213,64 @@ helpBtn.addEventListener('click', openHelp);
 helpClose.addEventListener('click', () => { helpOverlay.hidden = true; });
 helpOverlay.addEventListener('click', e => {
   if (e.target === helpOverlay) helpOverlay.hidden = true;
+});
+
+// ── Feedback ──────────────────────────────────────────────────────────────────
+
+/** The feedback window, opened by the FB button at the top of the sidebar. */
+function openFeedback() {
+  setSettingsOpen(false);
+  qrOverlay.hidden = true;
+  changelogOverlay.hidden = true;
+  helpOverlay.hidden = true;
+  feedbackStatus.textContent = '';
+  feedbackStatus.className = 'feedback-status';
+  feedbackOverlay.hidden = false;
+  feedbackMessage.focus();
+}
+
+function setFeedbackStatus(key, kind) {
+  feedbackStatus.textContent = t(key);
+  feedbackStatus.className = 'feedback-status' + (kind ? ' ' + kind : '');
+}
+
+/** Post the message to the shared GAS endpoint. Sent as text/plain so the
+ *  browser makes a "simple" request: GAS cannot answer a CORS preflight. */
+function sendFeedback(e) {
+  e.preventDefault();
+  const message = feedbackMessage.value.trim();
+  if (!message) { setFeedbackStatus('c.feedbackEmpty', 'err'); return; }
+  feedbackSend.disabled = true;
+  setFeedbackStatus('c.feedbackSending', '');
+  fetch(FEEDBACK_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+    body: JSON.stringify({
+      app: APP_ID, version: APP_VERSION, lang: I18N.lang(), message,
+      contact: feedbackContact.value.trim(), website: feedbackWebsite.value,
+    }),
+  }).then(res => res.json()).then(res => {
+    if (!res || !res.ok) throw new Error(res && res.error);
+    feedbackMessage.value = '';
+    feedbackContact.value = '';
+    setFeedbackStatus('c.feedbackThanks', 'ok');
+  }).catch(() => {
+    setFeedbackStatus('c.feedbackError', 'err');
+  }).then(() => {
+    feedbackSend.disabled = false;
+  });
+}
+
+feedbackBtn.addEventListener('click', openFeedback);
+feedbackForm.addEventListener('submit', sendFeedback);
+feedbackClose.addEventListener('click', () => { feedbackOverlay.hidden = true; });
+feedbackOverlay.addEventListener('click', e => {
+  if (e.target === feedbackOverlay) feedbackOverlay.hidden = true;
+});
+// Esc closes it from inside the fields too. The global handler already checks Esc
+// before it skips keys typed into fields; this keeps it working if that order changes.
+feedbackOverlay.addEventListener('keydown', e => {
+  if (e.key === 'Escape') feedbackOverlay.hidden = true;
 });
 
 // ── Touch support ─────────────────────────────────────────────────────────────

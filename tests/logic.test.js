@@ -92,3 +92,10 @@ test('STRINGS ja and en have the same keys', () => {
   const en = Object.keys(app.STRINGS.en).sort();
   assert.deepEqual(ja, en);
 });
+
+test('Feedback: an empty message is not sent and asks to write something', () => {
+  el('feedbackMessage').value = '   ';
+  el('feedbackForm')._listeners.submit({ preventDefault() {} });
+  assert.equal(el('feedbackStatus').textContent, app.STRINGS.en['c.feedbackEmpty']);
+  assert.ok(app.STRINGS.ja['c.feedback'] && app.STRINGS.en['c.feedback']);
+});

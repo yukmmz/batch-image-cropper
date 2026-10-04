@@ -14,6 +14,7 @@ No upload, no server — everything runs locally in your browser.
 - **Zoom & pan** — `Ctrl/Cmd + Scroll` to zoom, `Scroll` to pan, double-click to reset
 - **How to use (?)** — the ? button at the top of the sidebar (or the `?` key) opens a help window with basic usage, all keyboard shortcuts and touch gestures
 - **Fullscreen** — `F` key or the ⛶ button (top of the sidebar) hides browser chrome for more canvas space
+- **FB** — the FB button at the top of the sidebar sends feedback or a bug report to the developer
 - **Settings (⚙)** — language (Japanese / English), QR codes for sharing, changelog, link to other apps
 - **Undo** — per-image undo history (`Ctrl/Cmd + Z`)
 - **JSON export / import** — save and restore crop rects by filename
@@ -59,7 +60,8 @@ Tests (pure logic, no browser needed): `node --test` in the repository root.
 ## Saved data
 
 - Images and crop rects are **not** stored anywhere; they are gone when you close the page. Use **JSON export** to keep the crop rects.
-- The browser's localStorage keeps only the language and the last version you have seen (keys starting with `batch-image-cropper/`). Nothing is sent to a server.
+- The browser's localStorage keeps only the language and the last version you have seen (keys starting with `batch-image-cropper/`).
+- The only thing ever sent anywhere is what you write in the **FB** window, and only when you press Send (together with the app name, version and display language). Your images are never uploaded.
 - To reset, clear this site's data in your browser settings.
 
 ## Browser support
