@@ -4,7 +4,7 @@ const HANDLE_R   = 6;
 const HANDLE_HIT = 10;
 const UNDO_LIMIT = 50;
 
-const APP_VERSION = '1.3.0';
+const APP_VERSION = '1.4.0';
 const APP_URL     = 'https://yukmmz.github.io/batch-image-cropper/';
 const SRC_URL     = 'https://github.com/yukmmz/batch-image-cropper';
 /* Shared feedback endpoint (Google Apps Script web app, one for every yukmmz.github.io app).
@@ -22,6 +22,10 @@ const STORAGE_PREFIX   = 'batch-image-cropper/';
  * version under the app name. Bumping APP_VERSION means adding an entry here;
  * the first entry must match APP_VERSION. Written for users, in both languages. */
 const CHANGELOG = [
+  { version: '1.4.0', date: '2026-10-05', items: [
+    { ja: 'ボタンにマウスを乗せたときの説明が、すぐ（0.5秒で）出るようにしました',
+      en: 'Button hints now appear quickly (after 0.5 s) when you hover with the mouse' },
+  ] },
   { version: '1.3.0', date: '2026-10-04', items: [
     { ja: 'サイドバー上端に「FB」ボタンを追加しました。ご意見・不具合の報告を開発者に送れます',
       en: 'New "FB" button at the top of the sidebar: send feedback or a bug report to the developer' },
@@ -1154,6 +1158,73 @@ function initFullscreen() {
 }
 
 initFullscreen();
+
+// ── Quick tooltips ────────────────────────────────────────────────────────────
+
+// The browser's own `title` tooltip waits about 1-2 s, too slow for icon-only
+// buttons. For a mouse pointer, show the element's `title` in our own bubble after TIP_DELAY_MS
+// instead. The `title` is lifted into data-tip while hovering (so the native tooltip never
+// appears) and put back on leave, so i18n.js can keep rewriting `title` on a language switch.
+// Touch and pen are left alone (no hover there).
+const TIP_DELAY_MS = 500;
+
+function initQuickTips() {
+  if (!document.body || typeof document.createElement !== 'function') return;  // headless test stubs
+  const bubble = document.createElement('div');
+  bubble.className = 'quick-tip';
+  bubble.setAttribute('role', 'tooltip');
+  bubble.hidden = true;
+  document.body.appendChild(bubble);
+  let target = null;
+  let timer = 0;
+
+  function place() {
+    const r = target.getBoundingClientRect();
+    const b = bubble.getBoundingClientRect();
+    const left = Math.min(Math.max(8, r.left + r.width / 2 - b.width / 2), window.innerWidth - b.width - 8);
+    let top = r.bottom + 6;
+    if (top + b.height > window.innerHeight - 8) top = r.top - b.height - 6;  // no room below
+    bubble.style.left = left + 'px';
+    bubble.style.top = top + 'px';
+  }
+
+  function hide() {
+    clearTimeout(timer);
+    bubble.hidden = true;
+    if (target) {
+      // put the title back unless something (i18n) already set a fresh one
+      if (!target.hasAttribute('title')) target.setAttribute('title', target.dataset.tip);
+      delete target.dataset.tip;
+      target = null;
+    }
+  }
+
+  document.addEventListener('pointerover', e => {
+    if (e.pointerType !== 'mouse') return;
+    const el = e.target.closest('[title], [data-tip]');
+    if (el === target) return;
+    hide();
+    if (!el || !el.getAttribute('title')) return;
+    target = el;
+    target.dataset.tip = target.getAttribute('title');
+    target.removeAttribute('title');
+    timer = setTimeout(() => {
+      if (!target || !document.contains(target)) return;
+      bubble.textContent = target.dataset.tip;
+      bubble.hidden = false;
+      place();
+    }, TIP_DELAY_MS);
+  });
+  document.addEventListener('pointerout', e => {
+    if (target && !target.contains(e.relatedTarget)) hide();
+  });
+  document.addEventListener('pointerdown', hide);
+  document.addEventListener('keydown', hide);
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('blur', hide);
+}
+
+initQuickTips();
 
 // ── JSON export / import ──────────────────────────────────────────────────────
 

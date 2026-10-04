@@ -751,3 +751,21 @@ a.btn { text-decoration: none; display: inline-block; }
 
 #feedbackSend { background: var(--accent); border-color: var(--accent); color: #fff; }
 #feedbackSend:disabled { opacity: .6; }
+
+/* ── Quick tooltips (common-ui §10) ─────────────────────────────────────────── */
+
+.quick-tip {
+  position: fixed;
+  z-index: 400;
+  max-width: 260px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--text);
+  color: var(--bg);
+  font-size: .8rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, .5);
+}
+.quick-tip[hidden] { display: none; }
